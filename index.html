@@ -1,0 +1,7366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Spanish Conjugation Gym</title>
+<style>
+  :root {
+    --bg: #faf8f4;
+    --surface: #ffffff;
+    --border: #e8e2d9;
+    --border-strong: #c8bfb0;
+    --text: #1a1714;
+    --text-muted: #6b6358;
+    --text-faint: #9e978e;
+    --accent: #3d5a99;
+    --accent-light: #eef1f9;
+    --accent-dark: #2c4480;
+    --green: #2d7a4f;
+    --green-light: #edf7f1;
+    --red: #b83232;
+    --red-light: #fdf0f0;
+    --amber: #8a5e00;
+    --amber-light: #fef8eb;
+    --purple: #5c3d99;
+    --purple-light: #f2eeff;
+    --radius: 10px;
+    --radius-sm: 6px;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.04);
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Georgia', serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+
+  .app { max-width: 680px; margin: 0 auto; padding: 2rem 1.25rem 4rem; }
+
+  /* Header */
+  .header { margin-bottom: 2rem; }
+  .header h1 { font-size: 1.7rem; font-weight: normal; letter-spacing: -0.02em; color: var(--text); }
+  .header h1 span { color: var(--accent); }
+  .header p { font-size: 0.875rem; color: var(--text-muted); margin-top: 0.25rem; font-family: system-ui, sans-serif; }
+
+  /* Cards */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem;
+    box-shadow: var(--shadow);
+    margin-bottom: 1rem;
+  }
+
+  .section-label {
+    font-family: system-ui, sans-serif;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-faint);
+    margin-bottom: 0.75rem;
+  }
+
+  /* Tense grid */
+  .tense-grid { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+  .tense-chip {
+    font-family: system-ui, sans-serif;
+    font-size: 0.8rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 20px;
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+    user-select: none;
+  }
+  .tense-chip:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .tense-chip.on { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+  /* Verb list editor */
+  .verb-editor { border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; }
+  .verb-row {
+    display: grid;
+    grid-template-columns: 130px 1fr 28px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    font-family: system-ui, sans-serif;
+    font-size: 0.85rem;
+  }
+  .verb-row:last-child { border-bottom: none; }
+  .verb-row input {
+    border: none;
+    padding: 0.55rem 0.75rem;
+    font-size: 0.85rem;
+    font-family: system-ui, sans-serif;
+    background: transparent;
+    color: var(--text);
+    width: 100%;
+    outline: none;
+  }
+  .verb-row input:first-child { font-weight: 600; border-right: 1px solid var(--border); }
+  .verb-row input:focus { background: var(--accent-light); }
+  .verb-del {
+    background: none; border: none; cursor: pointer;
+    color: var(--text-faint); font-size: 1rem; padding: 0.4rem;
+    line-height: 1; display: flex; align-items: center; justify-content: center;
+  }
+  .verb-del:hover { color: var(--red); }
+
+  .verb-list-wrap { max-height: 280px; overflow-y: auto; }
+
+  .add-verb-btn {
+    font-family: system-ui, sans-serif;
+    font-size: 0.8rem;
+    padding: 0.4rem 0.9rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .add-verb-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+
+  /* Start button */
+  .start-btn {
+    width: 100%;
+    padding: 0.9rem;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius);
+    font-size: 1rem;
+    font-family: 'Georgia', serif;
+    cursor: pointer;
+    transition: background 0.15s;
+    letter-spacing: 0.01em;
+    box-shadow: 0 2px 8px rgba(61,90,153,0.25);
+  }
+  .start-btn:hover { background: var(--accent-dark); }
+  .start-btn:disabled { opacity: 0.4; cursor: default; }
+
+  /* Exercise screen */
+  .progress-row {
+    display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+    margin-bottom: 1.25rem; font-family: system-ui, sans-serif;
+  }
+  .badge {
+    font-size: 0.75rem;
+    padding: 0.2rem 0.6rem;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    background: var(--surface);
+  }
+  .badge-tense {
+    background: var(--purple-light);
+    border-color: #c4b0f0;
+    color: var(--purple);
+    font-weight: 600;
+  }
+
+  .stats-row {
+    display: grid; grid-template-columns: 1fr 1fr 1fr;
+    gap: 0.5rem; margin-bottom: 1rem;
+  }
+  .stat-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 0.6rem 0.75rem;
+    text-align: center;
+    box-shadow: var(--shadow);
+  }
+  .stat-num { font-size: 1.4rem; font-weight: normal; color: var(--text); }
+  .stat-lbl { font-family: system-ui, sans-serif; font-size: 0.7rem; color: var(--text-faint); margin-top: 1px; }
+
+  /* Verb card */
+  .verb-display { display: flex; align-items: baseline; gap: 1rem; margin-bottom: 0.5rem; }
+  .verb-inf { font-size: 2rem; font-weight: normal; letter-spacing: -0.02em; color: var(--text); }
+  .verb-en { font-size: 0.95rem; color: var(--text-muted); font-style: italic; }
+  .tense-name { font-family: system-ui, sans-serif; font-size: 0.8rem; color: var(--text-faint); margin-bottom: 0.75rem; }
+
+  /* Pronoun dots */
+  .dots-row { display: flex; gap: 0.4rem; align-items: center; }
+  .dot {
+    width: 9px; height: 9px; border-radius: 50%;
+    background: var(--border);
+    border: 1.5px solid var(--border-strong);
+    transition: all 0.2s;
+    flex-shrink: 0;
+  }
+  .dot.done { background: var(--accent); border-color: var(--accent); }
+  .dot.current { background: #b5c3e8; border-color: var(--accent); }
+  .dots-label {
+    font-family: system-ui, sans-serif;
+    font-size: 0.75rem;
+    color: var(--text-faint);
+    margin-left: 0.5rem;
+  }
+
+  /* Input */
+  .pronoun-label {
+    font-size: 1.1rem; color: var(--text); margin-bottom: 0.5rem;
+    font-family: system-ui, sans-serif; font-weight: 600;
+  }
+  .pronoun-label span { font-weight: normal; color: var(--text-muted); font-size: 0.9rem; }
+
+  .answer-input {
+    width: 100%;
+    font-size: 1.15rem;
+    padding: 0.7rem 1rem;
+    border: 2px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-family: 'Georgia', serif;
+    background: var(--surface);
+    color: var(--text);
+    outline: none;
+    transition: border-color 0.15s, background 0.15s;
+  }
+  .answer-input:focus { border-color: var(--accent); }
+  .answer-input.correct { border-color: var(--green); background: var(--green-light); }
+  .answer-input.wrong { border-color: var(--red); background: var(--red-light); }
+
+  .feedback {
+    font-family: system-ui, sans-serif;
+    font-size: 0.875rem;
+    min-height: 1.5rem;
+    margin-top: 0.5rem;
+    padding: 0 0.1rem;
+  }
+  .feedback.correct { color: var(--green); }
+  .feedback.wrong { color: var(--red); }
+  .feedback .correct-form { font-weight: 600; }
+
+  .btn-row { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
+
+  .btn {
+    font-family: system-ui, sans-serif;
+    font-size: 0.875rem;
+    padding: 0.55rem 1.1rem;
+    border-radius: var(--radius-sm);
+    border: 1px solid var(--border-strong);
+    background: var(--surface);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .btn:hover { background: var(--bg); }
+  .btn-primary {
+    background: var(--accent);
+    color: #fff;
+    border-color: var(--accent);
+    box-shadow: 0 1px 4px rgba(61,90,153,0.2);
+  }
+  .btn-primary:hover { background: var(--accent-dark); border-color: var(--accent-dark); }
+
+  .settings-link {
+    font-family: system-ui, sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-faint);
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-decoration: underline;
+    padding: 0;
+  }
+  .settings-link:hover { color: var(--text-muted); }
+
+  /* Done screen */
+  .done-card { text-align: center; padding: 2.5rem 1.25rem; }
+  .done-card h2 { font-size: 1.5rem; font-weight: normal; margin-bottom: 0.5rem; }
+  .done-card p { color: var(--text-muted); font-family: system-ui, sans-serif; font-size: 0.875rem; margin-bottom: 2rem; }
+  .done-stats { display: flex; gap: 1rem; justify-content: center; margin-bottom: 2rem; }
+  .done-stat { padding: 1rem 1.5rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg); }
+  .done-stat .n { font-size: 2rem; }
+  .done-stat .l { font-size: 0.75rem; color: var(--text-faint); font-family: system-ui, sans-serif; }
+  .done-btns { display: flex; gap: 0.75rem; justify-content: center; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+  /* Responsive */
+  @media (max-width: 480px) {
+    .app { padding: 1.25rem 1rem 3rem; }
+    .verb-inf { font-size: 1.6rem; }
+    .done-stats { gap: 0.5rem; }
+    .done-stat { padding: 0.75rem 1rem; }
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+
+<script>
+const VERB_DB = {
+  "abrir": {
+    "en": "to open",
+    "pres": [
+      "abro",
+      "abres",
+      "abre",
+      "abrimos",
+      "abrís",
+      "abren"
+    ],
+    "pret": [
+      "abrí",
+      "abriste",
+      "abrió",
+      "abrimos",
+      "abristeis",
+      "abrieron"
+    ],
+    "imperf": [
+      "abría",
+      "abrías",
+      "abría",
+      "abríamos",
+      "abríais",
+      "abrían"
+    ],
+    "fut": [
+      "abriré",
+      "abrirás",
+      "abrirá",
+      "abriremos",
+      "abriréis",
+      "abrirán"
+    ],
+    "cond": [
+      "abriría",
+      "abrirías",
+      "abriría",
+      "abriríamos",
+      "abriríais",
+      "abrirían"
+    ],
+    "subjpres": [
+      "abra",
+      "abras",
+      "abra",
+      "abramos",
+      "abráis",
+      "abran"
+    ],
+    "subjimperf": [
+      "abriera",
+      "abrieras",
+      "abriera",
+      "abriéramos",
+      "abrierais",
+      "abrieran"
+    ],
+    "imp": [
+      "abre",
+      "abra",
+      "abramos",
+      "abrid",
+      "abran"
+    ]
+  },
+  "aburrir": {
+    "en": "to bore",
+    "pres": [
+      "aburro",
+      "aburres",
+      "aburre",
+      "aburrimos",
+      "aburrís",
+      "aburren"
+    ],
+    "pret": [
+      "aburrí",
+      "aburriste",
+      "aburrió",
+      "aburrimos",
+      "aburristeis",
+      "aburrieron"
+    ],
+    "imperf": [
+      "aburría",
+      "aburrías",
+      "aburría",
+      "aburríamos",
+      "aburríais",
+      "aburrían"
+    ],
+    "fut": [
+      "aburriré",
+      "aburrirás",
+      "aburrirá",
+      "aburriremos",
+      "aburriréis",
+      "aburrirán"
+    ],
+    "cond": [
+      "aburriría",
+      "aburrirías",
+      "aburriría",
+      "aburriríamos",
+      "aburriríais",
+      "aburrirían"
+    ],
+    "subjpres": [
+      "aburra",
+      "aburras",
+      "aburra",
+      "aburramos",
+      "aburráis",
+      "aburran"
+    ],
+    "subjimperf": [
+      "aburriera",
+      "aburrieras",
+      "aburriera",
+      "aburriéramos",
+      "aburrierais",
+      "aburrieran"
+    ],
+    "imp": [
+      "aburre",
+      "aburra",
+      "aburramos",
+      "aburreid",
+      "aburran"
+    ]
+  },
+  "acabar": {
+    "en": "to finish/just (do sth)",
+    "pres": [
+      "acabo",
+      "acabas",
+      "acaba",
+      "acabamos",
+      "acabáis",
+      "acaban"
+    ],
+    "pret": [
+      "acabé",
+      "acabaste",
+      "acabó",
+      "acabamos",
+      "acabasteis",
+      "acabaron"
+    ],
+    "imperf": [
+      "acababa",
+      "acababas",
+      "acababa",
+      "acabábamos",
+      "acababais",
+      "acababan"
+    ],
+    "fut": [
+      "acabaré",
+      "acabarás",
+      "acabará",
+      "acabaremos",
+      "acabaréis",
+      "acabarán"
+    ],
+    "cond": [
+      "acabaría",
+      "acabarías",
+      "acabaría",
+      "acabaríamos",
+      "acabaríais",
+      "acabarían"
+    ],
+    "subjpres": [
+      "acabe",
+      "acabes",
+      "acabe",
+      "acabemos",
+      "acabéis",
+      "acaben"
+    ],
+    "subjimperf": [
+      "acabara",
+      "acabaras",
+      "acabara",
+      "acabáramos",
+      "acabarais",
+      "acabaran"
+    ],
+    "imp": [
+      "acaba",
+      "acabe",
+      "acabemos",
+      "acabad",
+      "acaben"
+    ]
+  },
+  "aceptar": {
+    "en": "to accept",
+    "pres": [
+      "acepto",
+      "aceptas",
+      "acepta",
+      "aceptamos",
+      "aceptáis",
+      "aceptan"
+    ],
+    "pret": [
+      "acepté",
+      "aceptaste",
+      "aceptó",
+      "aceptamos",
+      "aceptasteis",
+      "aceptaron"
+    ],
+    "imperf": [
+      "aceptaba",
+      "aceptabas",
+      "aceptaba",
+      "aceptábamos",
+      "aceptabais",
+      "aceptaban"
+    ],
+    "fut": [
+      "aceptaré",
+      "aceptarás",
+      "aceptará",
+      "aceptaremos",
+      "aceptaréis",
+      "aceptarán"
+    ],
+    "cond": [
+      "aceptaría",
+      "aceptarías",
+      "aceptaría",
+      "aceptaríamos",
+      "aceptaríais",
+      "aceptarían"
+    ],
+    "subjpres": [
+      "acepte",
+      "aceptes",
+      "acepte",
+      "aceptemos",
+      "aceptéis",
+      "acepten"
+    ],
+    "subjimperf": [
+      "aceptara",
+      "aceptaras",
+      "aceptara",
+      "aceptáramos",
+      "aceptarais",
+      "aceptaran"
+    ],
+    "imp": [
+      "acepta",
+      "acepte",
+      "aceptemos",
+      "aceptad",
+      "acepten"
+    ]
+  },
+  "agradecer": {
+    "en": "to thank / be grateful",
+    "pres": [
+      "agradezco",
+      "agradeces",
+      "agradece",
+      "agradecemos",
+      "agradecéis",
+      "agradecen"
+    ],
+    "pret": [
+      "agradecí",
+      "agradeciste",
+      "agradeció",
+      "agradecimos",
+      "agradecisteis",
+      "agradecieron"
+    ],
+    "imperf": [
+      "agradecía",
+      "agradecías",
+      "agradecía",
+      "agradecíamos",
+      "agradecíais",
+      "agradecían"
+    ],
+    "fut": [
+      "agradeceré",
+      "agradecerás",
+      "agradecerá",
+      "agradeceremos",
+      "agradeceréis",
+      "agradecerán"
+    ],
+    "cond": [
+      "agradecería",
+      "agradecerías",
+      "agradecería",
+      "agradeceríamos",
+      "agradeceríais",
+      "agradecerían"
+    ],
+    "subjpres": [
+      "agradezca",
+      "agradezcas",
+      "agradezca",
+      "agradezcamos",
+      "agradezcáis",
+      "agradezcan"
+    ],
+    "subjimperf": [
+      "agradeciera",
+      "agradecieras",
+      "agradeciera",
+      "agradeciéramos",
+      "agradecierais",
+      "agradecieran"
+    ],
+    "imp": [
+      "agradece",
+      "agradezca",
+      "agradezcamos",
+      "agradeced",
+      "agradezcan"
+    ]
+  },
+  "aguantar": {
+    "en": "to endure / put up with",
+    "pres": [
+      "aguanto",
+      "aguantas",
+      "aguanta",
+      "aguantamos",
+      "aguantáis",
+      "aguantan"
+    ],
+    "pret": [
+      "aguanté",
+      "aguantaste",
+      "aguantó",
+      "aguantamos",
+      "aguantasteis",
+      "aguantaron"
+    ],
+    "imperf": [
+      "aguantaba",
+      "aguantabas",
+      "aguantaba",
+      "aguantábamos",
+      "aguantabais",
+      "aguantaban"
+    ],
+    "fut": [
+      "aguantaré",
+      "aguantarás",
+      "aguantará",
+      "aguantaremos",
+      "aguantaréis",
+      "aguantarán"
+    ],
+    "cond": [
+      "aguantaría",
+      "aguantarías",
+      "aguantaría",
+      "aguantaríamos",
+      "aguantaríais",
+      "aguantarían"
+    ],
+    "subjpres": [
+      "aguante",
+      "aguantes",
+      "aguante",
+      "aguantemos",
+      "aguantéis",
+      "aguanten"
+    ],
+    "subjimperf": [
+      "aguantara",
+      "aguantaras",
+      "aguantara",
+      "aguantáramos",
+      "aguantarais",
+      "aguantaran"
+    ],
+    "imp": [
+      "aguanta",
+      "aguante",
+      "aguantemos",
+      "aguantad",
+      "aguanten"
+    ]
+  },
+  "almorzar": {
+    "en": "to have lunch",
+    "pres": [
+      "almuerzo",
+      "almuerzas",
+      "almuerza",
+      "almorzamos",
+      "almorzáis",
+      "almuerzan"
+    ],
+    "pret": [
+      "almorcé",
+      "almorzaste",
+      "almorzó",
+      "almorzamos",
+      "almorzasteis",
+      "almorzaron"
+    ],
+    "imperf": [
+      "almorzaba",
+      "almorzabas",
+      "almorzaba",
+      "almorzábamos",
+      "almorzabais",
+      "almorzaban"
+    ],
+    "fut": [
+      "almorzaré",
+      "almorzarás",
+      "almorzará",
+      "almorzaremos",
+      "almorzaréis",
+      "almorzarán"
+    ],
+    "cond": [
+      "almorzaría",
+      "almorzarías",
+      "almorzaría",
+      "almorzaríamos",
+      "almorzaríais",
+      "almorzarían"
+    ],
+    "subjpres": [
+      "almuerce",
+      "almuerces",
+      "almuerce",
+      "almorcemos",
+      "almorcéis",
+      "almuercen"
+    ],
+    "subjimperf": [
+      "almorzara",
+      "almorzaras",
+      "almorzara",
+      "almorzáramos",
+      "almorzarais",
+      "almorzaran"
+    ],
+    "imp": [
+      "almuerza",
+      "almuerce",
+      "almorcemos",
+      "almorzad",
+      "almuercen"
+    ]
+  },
+  "andar": {
+    "en": "to walk",
+    "pres": [
+      "ando",
+      "andas",
+      "anda",
+      "andamos",
+      "andáis",
+      "andan"
+    ],
+    "pret": [
+      "anduve",
+      "anduviste",
+      "anduvo",
+      "anduvimos",
+      "anduvisteis",
+      "anduvieron"
+    ],
+    "imperf": [
+      "andaba",
+      "andabas",
+      "andaba",
+      "andábamos",
+      "andabais",
+      "andaban"
+    ],
+    "fut": [
+      "andaré",
+      "andarás",
+      "andará",
+      "andaremos",
+      "andaréis",
+      "andarán"
+    ],
+    "cond": [
+      "andaría",
+      "andarías",
+      "andaría",
+      "andaríamos",
+      "andaríais",
+      "andarían"
+    ],
+    "subjpres": [
+      "ande",
+      "andes",
+      "ande",
+      "andemos",
+      "andéis",
+      "anden"
+    ],
+    "subjimperf": [
+      "anduviera",
+      "anduvieras",
+      "anduviera",
+      "anduviéramos",
+      "anduvierais",
+      "anduvieran"
+    ],
+    "imp": [
+      "anda",
+      "ande",
+      "andemos",
+      "andad",
+      "anden"
+    ]
+  },
+  "apagar": {
+    "en": "to turn off / extinguish",
+    "pres": [
+      "apago",
+      "apagas",
+      "apaga",
+      "apagamos",
+      "apagáis",
+      "apagan"
+    ],
+    "pret": [
+      "apagué",
+      "apagaste",
+      "apagó",
+      "apagamos",
+      "apagasteis",
+      "apagaron"
+    ],
+    "imperf": [
+      "apagaba",
+      "apagabas",
+      "apagaba",
+      "apagábamos",
+      "apagabais",
+      "apagaban"
+    ],
+    "fut": [
+      "apagaré",
+      "apagarás",
+      "apagará",
+      "apagaremos",
+      "apagaréis",
+      "apagarán"
+    ],
+    "cond": [
+      "apagaría",
+      "apagarías",
+      "apagaría",
+      "apagaríamos",
+      "apagaríais",
+      "apagarían"
+    ],
+    "subjpres": [
+      "apague",
+      "apagues",
+      "apague",
+      "apaguemos",
+      "apaguéis",
+      "apaguen"
+    ],
+    "subjimperf": [
+      "apagara",
+      "apagaras",
+      "apagara",
+      "apagáramos",
+      "apagarais",
+      "apagaran"
+    ],
+    "imp": [
+      "apaga",
+      "apague",
+      "apaguemos",
+      "apagad",
+      "apaguen"
+    ]
+  },
+  "aprender": {
+    "en": "to learn",
+    "pres": [
+      "aprendo",
+      "aprendes",
+      "aprende",
+      "aprendemos",
+      "aprendéis",
+      "aprenden"
+    ],
+    "pret": [
+      "aprendí",
+      "aprendiste",
+      "aprendió",
+      "aprendimos",
+      "aprendisteis",
+      "aprendieron"
+    ],
+    "imperf": [
+      "aprendía",
+      "aprendías",
+      "aprendía",
+      "aprendíamos",
+      "aprendíais",
+      "aprendían"
+    ],
+    "fut": [
+      "aprenderé",
+      "aprenderás",
+      "aprenderá",
+      "aprenderemos",
+      "aprenderéis",
+      "aprenderán"
+    ],
+    "cond": [
+      "aprendería",
+      "aprenderías",
+      "aprendería",
+      "aprenderíamos",
+      "aprenderíais",
+      "aprenderían"
+    ],
+    "subjpres": [
+      "aprenda",
+      "aprendas",
+      "aprenda",
+      "aprendamos",
+      "aprendáis",
+      "aprendan"
+    ],
+    "subjimperf": [
+      "aprendiera",
+      "aprendieras",
+      "aprendiera",
+      "aprendiéramos",
+      "aprendierais",
+      "aprendieran"
+    ],
+    "imp": [
+      "aprende",
+      "aprenda",
+      "aprendamos",
+      "aprended",
+      "aprendan"
+    ]
+  },
+  "ayudar": {
+    "en": "to help",
+    "pres": [
+      "ayudo",
+      "ayudas",
+      "ayuda",
+      "ayudamos",
+      "ayudáis",
+      "ayudan"
+    ],
+    "pret": [
+      "ayudé",
+      "ayudaste",
+      "ayudó",
+      "ayudamos",
+      "ayudasteis",
+      "ayudaron"
+    ],
+    "imperf": [
+      "ayudaba",
+      "ayudabas",
+      "ayudaba",
+      "ayudábamos",
+      "ayudabais",
+      "ayudaban"
+    ],
+    "fut": [
+      "ayudaré",
+      "ayudarás",
+      "ayudará",
+      "ayudaremos",
+      "ayudaréis",
+      "ayudarán"
+    ],
+    "cond": [
+      "ayudaría",
+      "ayudarías",
+      "ayudaría",
+      "ayudaríamos",
+      "ayudaríais",
+      "ayudarían"
+    ],
+    "subjpres": [
+      "ayude",
+      "ayudes",
+      "ayude",
+      "ayudemos",
+      "ayudéis",
+      "ayuden"
+    ],
+    "subjimperf": [
+      "ayudara",
+      "ayudaras",
+      "ayudara",
+      "ayudáramos",
+      "ayudarais",
+      "ayudaran"
+    ],
+    "imp": [
+      "ayuda",
+      "ayude",
+      "ayudemos",
+      "ayudad",
+      "ayuden"
+    ]
+  },
+  "beber": {
+    "en": "to drink",
+    "pres": [
+      "bebo",
+      "bebes",
+      "bebe",
+      "bebemos",
+      "bebéis",
+      "beben"
+    ],
+    "pret": [
+      "bebí",
+      "bebiste",
+      "bebió",
+      "bebimos",
+      "bebisteis",
+      "bebieron"
+    ],
+    "imperf": [
+      "bebía",
+      "bebías",
+      "bebía",
+      "bebíamos",
+      "bebíais",
+      "bebían"
+    ],
+    "fut": [
+      "beberé",
+      "beberás",
+      "beberá",
+      "beberemos",
+      "beberéis",
+      "beberán"
+    ],
+    "cond": [
+      "bebería",
+      "beberías",
+      "bebería",
+      "beberíamos",
+      "beberíais",
+      "beberían"
+    ],
+    "subjpres": [
+      "beba",
+      "bebas",
+      "beba",
+      "bebamos",
+      "bebáis",
+      "beban"
+    ],
+    "subjimperf": [
+      "bebiera",
+      "bebieras",
+      "bebiera",
+      "bebiéramos",
+      "bebierais",
+      "bebieran"
+    ],
+    "imp": [
+      "bebe",
+      "beba",
+      "bebamos",
+      "bebed",
+      "beban"
+    ]
+  },
+  "buscar": {
+    "en": "to look for",
+    "pres": [
+      "busco",
+      "buscas",
+      "busca",
+      "buscamos",
+      "buscáis",
+      "buscan"
+    ],
+    "pret": [
+      "busqué",
+      "buscaste",
+      "buscó",
+      "buscamos",
+      "buscasteis",
+      "buscaron"
+    ],
+    "imperf": [
+      "buscaba",
+      "buscabas",
+      "buscaba",
+      "buscábamos",
+      "buscabais",
+      "buscaban"
+    ],
+    "fut": [
+      "buscaré",
+      "buscarás",
+      "buscará",
+      "buscaremos",
+      "buscaréis",
+      "buscarán"
+    ],
+    "cond": [
+      "buscaría",
+      "buscarías",
+      "buscaría",
+      "buscaríamos",
+      "buscaríais",
+      "buscarían"
+    ],
+    "subjpres": [
+      "busque",
+      "busques",
+      "busque",
+      "busquemos",
+      "busquéis",
+      "busquen"
+    ],
+    "subjimperf": [
+      "buscara",
+      "buscaras",
+      "buscara",
+      "buscáramos",
+      "buscarais",
+      "buscaran"
+    ],
+    "imp": [
+      "busca",
+      "busque",
+      "busquemos",
+      "buscad",
+      "busquen"
+    ]
+  },
+  "caer": {
+    "en": "to fall",
+    "pres": [
+      "caigo",
+      "caes",
+      "cae",
+      "caemos",
+      "caéis",
+      "caen"
+    ],
+    "pret": [
+      "caí",
+      "caíste",
+      "cayó",
+      "caímos",
+      "caísteis",
+      "cayeron"
+    ],
+    "imperf": [
+      "caía",
+      "caías",
+      "caía",
+      "caíamos",
+      "caíais",
+      "caían"
+    ],
+    "fut": [
+      "caeré",
+      "caerás",
+      "caerá",
+      "caeremos",
+      "caeréis",
+      "caerán"
+    ],
+    "cond": [
+      "caería",
+      "caerías",
+      "caería",
+      "caeríamos",
+      "caeríais",
+      "caerían"
+    ],
+    "subjpres": [
+      "caiga",
+      "caigas",
+      "caiga",
+      "caigamos",
+      "caigáis",
+      "caigan"
+    ],
+    "subjimperf": [
+      "cayera",
+      "cayeras",
+      "cayera",
+      "cayéramos",
+      "cayerais",
+      "cayeran"
+    ],
+    "imp": [
+      "cae",
+      "caiga",
+      "caigamos",
+      "caed",
+      "caigan"
+    ]
+  },
+  "cambiar": {
+    "en": "to change",
+    "pres": [
+      "cambio",
+      "cambias",
+      "cambia",
+      "cambiamos",
+      "cambiáis",
+      "cambian"
+    ],
+    "pret": [
+      "cambié",
+      "cambiaste",
+      "cambió",
+      "cambiamos",
+      "cambiasteis",
+      "cambiaron"
+    ],
+    "imperf": [
+      "cambiaba",
+      "cambiabas",
+      "cambiaba",
+      "cambiábamos",
+      "cambiabais",
+      "cambiaban"
+    ],
+    "fut": [
+      "cambiaré",
+      "cambiarás",
+      "cambiará",
+      "cambiaremos",
+      "cambiaréis",
+      "cambiarán"
+    ],
+    "cond": [
+      "cambiaría",
+      "cambiarías",
+      "cambiaría",
+      "cambiaríamos",
+      "cambiaríais",
+      "cambiarían"
+    ],
+    "subjpres": [
+      "cambie",
+      "cambies",
+      "cambie",
+      "cambiemos",
+      "cambiéis",
+      "cambien"
+    ],
+    "subjimperf": [
+      "cambiara",
+      "cambiaras",
+      "cambiara",
+      "cambiáramos",
+      "cambiarais",
+      "cambiaran"
+    ],
+    "imp": [
+      "cambia",
+      "cambie",
+      "cambiemos",
+      "cambiad",
+      "cambien"
+    ]
+  },
+  "caminar": {
+    "en": "to walk / hike",
+    "pres": [
+      "camino",
+      "caminas",
+      "camina",
+      "caminamos",
+      "camináis",
+      "caminan"
+    ],
+    "pret": [
+      "caminé",
+      "caminaste",
+      "caminó",
+      "caminamos",
+      "caminasteis",
+      "caminaron"
+    ],
+    "imperf": [
+      "caminaba",
+      "caminabas",
+      "caminaba",
+      "caminábamos",
+      "caminabais",
+      "caminaban"
+    ],
+    "fut": [
+      "caminaré",
+      "caminarás",
+      "caminará",
+      "caminaremos",
+      "caminaréis",
+      "caminarán"
+    ],
+    "cond": [
+      "caminaría",
+      "caminarías",
+      "caminaría",
+      "caminaríamos",
+      "caminaríais",
+      "caminarían"
+    ],
+    "subjpres": [
+      "camine",
+      "camines",
+      "camine",
+      "caminemos",
+      "caminéis",
+      "caminen"
+    ],
+    "subjimperf": [
+      "caminara",
+      "caminaras",
+      "caminara",
+      "camináramos",
+      "caminarais",
+      "caminaran"
+    ],
+    "imp": [
+      "camina",
+      "camine",
+      "caminemos",
+      "caminad",
+      "caminen"
+    ]
+  },
+  "cerrar": {
+    "en": "to close",
+    "pres": [
+      "cierro",
+      "cierras",
+      "cierra",
+      "cerramos",
+      "cerráis",
+      "cierran"
+    ],
+    "pret": [
+      "cerré",
+      "cerraste",
+      "cerró",
+      "cerramos",
+      "cerrasteis",
+      "cerraron"
+    ],
+    "imperf": [
+      "cerraba",
+      "cerrabas",
+      "cerraba",
+      "cerrábamos",
+      "cerrabais",
+      "cerraban"
+    ],
+    "fut": [
+      "cerraré",
+      "cerrarás",
+      "cerrará",
+      "cerraremos",
+      "cerraréis",
+      "cerrarán"
+    ],
+    "cond": [
+      "cerraría",
+      "cerrarías",
+      "cerraría",
+      "cerraríamos",
+      "cerraríais",
+      "cerrarían"
+    ],
+    "subjpres": [
+      "cierre",
+      "cierres",
+      "cierre",
+      "cerremos",
+      "cerréis",
+      "cierren"
+    ],
+    "subjimperf": [
+      "cerrara",
+      "cerraras",
+      "cerrara",
+      "cerráramos",
+      "cerrarais",
+      "cerraran"
+    ],
+    "imp": [
+      "cierra",
+      "cierre",
+      "cerremos",
+      "cerrad",
+      "cierren"
+    ]
+  },
+  "cocinar": {
+    "en": "to cook",
+    "pres": [
+      "cocino",
+      "cocinas",
+      "cocina",
+      "cocinamos",
+      "cocináis",
+      "cocinan"
+    ],
+    "pret": [
+      "cociné",
+      "cocinaste",
+      "cocinó",
+      "cocinamos",
+      "cocinasteis",
+      "cocinaron"
+    ],
+    "imperf": [
+      "cocinaba",
+      "cocinabas",
+      "cocinaba",
+      "cocinábamos",
+      "cocinabais",
+      "cocinaban"
+    ],
+    "fut": [
+      "cocinaré",
+      "cocinarás",
+      "cocinará",
+      "cocinaremos",
+      "cocinaréis",
+      "cocinarán"
+    ],
+    "cond": [
+      "cocinaría",
+      "cocinarías",
+      "cocinaría",
+      "cocinaríamos",
+      "cocinaríais",
+      "cocinarían"
+    ],
+    "subjpres": [
+      "cocine",
+      "cocines",
+      "cocine",
+      "cocinemos",
+      "cocinéis",
+      "cocinen"
+    ],
+    "subjimperf": [
+      "cocinara",
+      "cocinaras",
+      "cocinara",
+      "cocináramos",
+      "cocinarais",
+      "cocinaran"
+    ],
+    "imp": [
+      "cocina",
+      "cocine",
+      "cocinemos",
+      "cocinad",
+      "cocinen"
+    ]
+  },
+  "comer": {
+    "en": "to eat",
+    "pres": [
+      "como",
+      "comes",
+      "come",
+      "comemos",
+      "coméis",
+      "comen"
+    ],
+    "pret": [
+      "comí",
+      "comiste",
+      "comió",
+      "comimos",
+      "comisteis",
+      "comieron"
+    ],
+    "imperf": [
+      "comía",
+      "comías",
+      "comía",
+      "comíamos",
+      "comíais",
+      "comían"
+    ],
+    "fut": [
+      "comeré",
+      "comerás",
+      "comerá",
+      "comeremos",
+      "comeréis",
+      "comerán"
+    ],
+    "cond": [
+      "comería",
+      "comerías",
+      "comería",
+      "comeríamos",
+      "comeríais",
+      "comerían"
+    ],
+    "subjpres": [
+      "coma",
+      "comas",
+      "coma",
+      "comamos",
+      "comáis",
+      "coman"
+    ],
+    "subjimperf": [
+      "comiera",
+      "comieras",
+      "comiera",
+      "comiéramos",
+      "comierais",
+      "comieran"
+    ],
+    "imp": [
+      "come",
+      "coma",
+      "comamos",
+      "comed",
+      "coman"
+    ]
+  },
+  "comenzar": {
+    "en": "to begin / start",
+    "pres": [
+      "comienzo",
+      "comienzas",
+      "comienza",
+      "comenzamos",
+      "comenzáis",
+      "comienzan"
+    ],
+    "pret": [
+      "comencé",
+      "comenzaste",
+      "comenzó",
+      "comenzamos",
+      "comenzasteis",
+      "comenzaron"
+    ],
+    "imperf": [
+      "comenzaba",
+      "comenzabas",
+      "comenzaba",
+      "comenzábamos",
+      "comenzabais",
+      "comenzaban"
+    ],
+    "fut": [
+      "comenzaré",
+      "comenzarás",
+      "comenzará",
+      "comenzaremos",
+      "comenzaréis",
+      "comenzarán"
+    ],
+    "cond": [
+      "comenzaría",
+      "comenzarías",
+      "comenzaría",
+      "comenzaríamos",
+      "comenzaríais",
+      "comenzarían"
+    ],
+    "subjpres": [
+      "comience",
+      "comiences",
+      "comience",
+      "comencemos",
+      "comencéis",
+      "comiencen"
+    ],
+    "subjimperf": [
+      "comenzara",
+      "comenzaras",
+      "comenzara",
+      "comenzáramos",
+      "comenzarais",
+      "comenzaran"
+    ],
+    "imp": [
+      "comienza",
+      "comience",
+      "comencemos",
+      "comenzad",
+      "comiencen"
+    ]
+  },
+  "comprar": {
+    "en": "to buy",
+    "pres": [
+      "compro",
+      "compras",
+      "compra",
+      "compramos",
+      "compráis",
+      "compran"
+    ],
+    "pret": [
+      "compré",
+      "compraste",
+      "compró",
+      "compramos",
+      "comprasteis",
+      "compraron"
+    ],
+    "imperf": [
+      "compraba",
+      "comprabas",
+      "compraba",
+      "comprábamos",
+      "comprabais",
+      "compraban"
+    ],
+    "fut": [
+      "compraré",
+      "comprarás",
+      "comprará",
+      "compraremos",
+      "compraréis",
+      "comprarán"
+    ],
+    "cond": [
+      "compraría",
+      "comprarías",
+      "compraría",
+      "compraríamos",
+      "compraríais",
+      "comprarían"
+    ],
+    "subjpres": [
+      "compre",
+      "compres",
+      "compre",
+      "compremos",
+      "compréis",
+      "compren"
+    ],
+    "subjimperf": [
+      "comprara",
+      "compraras",
+      "comprara",
+      "compráramos",
+      "comprarais",
+      "compraran"
+    ],
+    "imp": [
+      "compra",
+      "compre",
+      "compremos",
+      "comprad",
+      "compren"
+    ]
+  },
+  "comprender": {
+    "en": "to understand",
+    "pres": [
+      "comprendo",
+      "comprendes",
+      "comprende",
+      "comprendemos",
+      "comprendéis",
+      "comprenden"
+    ],
+    "pret": [
+      "comprendí",
+      "comprendiste",
+      "comprendió",
+      "comprendimos",
+      "comprendisteis",
+      "comprendieron"
+    ],
+    "imperf": [
+      "comprendía",
+      "comprendías",
+      "comprendía",
+      "comprendíamos",
+      "comprendíais",
+      "comprendían"
+    ],
+    "fut": [
+      "comprenderé",
+      "comprenderás",
+      "comprenderá",
+      "comprenderemos",
+      "comprenderéis",
+      "comprenderán"
+    ],
+    "cond": [
+      "comprendería",
+      "comprenderías",
+      "comprendería",
+      "comprenderíamos",
+      "comprenderíais",
+      "comprenderían"
+    ],
+    "subjpres": [
+      "comprenda",
+      "comprendas",
+      "comprenda",
+      "comprendamos",
+      "comprendáis",
+      "comprendan"
+    ],
+    "subjimperf": [
+      "comprendiera",
+      "comprendieras",
+      "comprendiera",
+      "comprendiéramos",
+      "comprendierais",
+      "comprendieran"
+    ],
+    "imp": [
+      "comprende",
+      "comprenda",
+      "comprendamos",
+      "comprended",
+      "comprendan"
+    ]
+  },
+  "conducir": {
+    "en": "to drive",
+    "pres": [
+      "conduzco",
+      "conduces",
+      "conduce",
+      "conducimos",
+      "conducís",
+      "conducen"
+    ],
+    "pret": [
+      "conduje",
+      "condujiste",
+      "condujo",
+      "condujimos",
+      "condujisteis",
+      "condujeron"
+    ],
+    "imperf": [
+      "conducía",
+      "conducías",
+      "conducía",
+      "conducíamos",
+      "conducíais",
+      "conducían"
+    ],
+    "fut": [
+      "conduciré",
+      "conducirás",
+      "conducirá",
+      "conduciremos",
+      "conduciréis",
+      "conducirán"
+    ],
+    "cond": [
+      "conduciría",
+      "conducirías",
+      "conduciría",
+      "conduciríamos",
+      "conduciríais",
+      "conducirían"
+    ],
+    "subjpres": [
+      "conduzca",
+      "conduzcas",
+      "conduzca",
+      "conduzcamos",
+      "conduzcáis",
+      "conduzcan"
+    ],
+    "subjimperf": [
+      "condujera",
+      "condujeras",
+      "condujera",
+      "condujéramos",
+      "condujerais",
+      "condujeran"
+    ],
+    "imp": [
+      "conduce",
+      "conduzca",
+      "conduzcamos",
+      "conducid",
+      "conduzcan"
+    ]
+  },
+  "conocer": {
+    "en": "to know (people/places)",
+    "pres": [
+      "conozco",
+      "conoces",
+      "conoce",
+      "conocemos",
+      "conocéis",
+      "conocen"
+    ],
+    "pret": [
+      "conocí",
+      "conociste",
+      "conoció",
+      "conocimos",
+      "conocisteis",
+      "conocieron"
+    ],
+    "imperf": [
+      "conocía",
+      "conocías",
+      "conocía",
+      "conocíamos",
+      "conocíais",
+      "conocían"
+    ],
+    "fut": [
+      "conoceré",
+      "conocerás",
+      "conocerá",
+      "conoceremos",
+      "conoceréis",
+      "conocerán"
+    ],
+    "cond": [
+      "conocería",
+      "conocerías",
+      "conocería",
+      "conoceríamos",
+      "conoceríais",
+      "conocerían"
+    ],
+    "subjpres": [
+      "conozca",
+      "conozcas",
+      "conozca",
+      "conozcamos",
+      "conozcáis",
+      "conozcan"
+    ],
+    "subjimperf": [
+      "conociera",
+      "conocieras",
+      "conociera",
+      "conociéramos",
+      "conocierais",
+      "conocieran"
+    ],
+    "imp": [
+      "conoce",
+      "conozca",
+      "conozcamos",
+      "conoced",
+      "conozcan"
+    ]
+  },
+  "conseguir": {
+    "en": "to get / obtain / achieve",
+    "pres": [
+      "consigo",
+      "consigues",
+      "consigue",
+      "conseguimos",
+      "conseguís",
+      "consiguen"
+    ],
+    "pret": [
+      "conseguí",
+      "conseguiste",
+      "consiguió",
+      "conseguimos",
+      "conseguisteis",
+      "consiguieron"
+    ],
+    "imperf": [
+      "conseguía",
+      "conseguías",
+      "conseguía",
+      "conseguíamos",
+      "conseguíais",
+      "conseguían"
+    ],
+    "fut": [
+      "conseguiré",
+      "conseguirás",
+      "conseguirá",
+      "conseguiremos",
+      "conseguiréis",
+      "conseguirán"
+    ],
+    "cond": [
+      "conseguiría",
+      "conseguirías",
+      "conseguiría",
+      "conseguiríamos",
+      "conseguiríais",
+      "conseguirían"
+    ],
+    "subjpres": [
+      "consiga",
+      "consigas",
+      "consiga",
+      "consigamos",
+      "consigáis",
+      "consigan"
+    ],
+    "subjimperf": [
+      "consiguiera",
+      "consiguieras",
+      "consiguiera",
+      "consiguiéramos",
+      "consiguierais",
+      "consiguieran"
+    ],
+    "imp": [
+      "consigue",
+      "consiga",
+      "consigamos",
+      "conseguid",
+      "consigan"
+    ]
+  },
+  "construir": {
+    "en": "to build / construct",
+    "pres": [
+      "construyo",
+      "construyes",
+      "construye",
+      "construimos",
+      "construís",
+      "construyen"
+    ],
+    "pret": [
+      "construí",
+      "construiste",
+      "construyó",
+      "construimos",
+      "construisteis",
+      "construyeron"
+    ],
+    "imperf": [
+      "construía",
+      "construías",
+      "construía",
+      "construíamos",
+      "construíais",
+      "construían"
+    ],
+    "fut": [
+      "construiré",
+      "construirás",
+      "construirá",
+      "construiremos",
+      "construiréis",
+      "construirán"
+    ],
+    "cond": [
+      "construiría",
+      "construirías",
+      "construiría",
+      "construiríamos",
+      "construiríais",
+      "construirían"
+    ],
+    "subjpres": [
+      "construya",
+      "construyas",
+      "construya",
+      "construyamos",
+      "construyáis",
+      "construyan"
+    ],
+    "subjimperf": [
+      "construyera",
+      "construyeras",
+      "construyera",
+      "construyéramos",
+      "construyerais",
+      "construyeran"
+    ],
+    "imp": [
+      "construye",
+      "construya",
+      "construyamos",
+      "construid",
+      "construyan"
+    ]
+  },
+  "contar": {
+    "en": "to count / tell / narrate",
+    "pres": [
+      "cuento",
+      "cuentas",
+      "cuenta",
+      "contamos",
+      "contáis",
+      "cuentan"
+    ],
+    "pret": [
+      "conté",
+      "contaste",
+      "contó",
+      "contamos",
+      "contasteis",
+      "contaron"
+    ],
+    "imperf": [
+      "contaba",
+      "contabas",
+      "contaba",
+      "contábamos",
+      "contabais",
+      "contaban"
+    ],
+    "fut": [
+      "contaré",
+      "contarás",
+      "contará",
+      "contaremos",
+      "contaréis",
+      "contarán"
+    ],
+    "cond": [
+      "contaría",
+      "contarías",
+      "contaría",
+      "contaríamos",
+      "contaríais",
+      "contarían"
+    ],
+    "subjpres": [
+      "cuente",
+      "cuentes",
+      "cuente",
+      "contemos",
+      "contéis",
+      "cuenten"
+    ],
+    "subjimperf": [
+      "contara",
+      "contaras",
+      "contara",
+      "contáramos",
+      "contarais",
+      "contaran"
+    ],
+    "imp": [
+      "cuenta",
+      "cuente",
+      "contemos",
+      "contad",
+      "cuenten"
+    ]
+  },
+  "contestar": {
+    "en": "to answer / reply",
+    "pres": [
+      "contesto",
+      "contestas",
+      "contesta",
+      "contestamos",
+      "contestáis",
+      "contestan"
+    ],
+    "pret": [
+      "contesté",
+      "contestaste",
+      "contestó",
+      "contestamos",
+      "contestasteis",
+      "contestaron"
+    ],
+    "imperf": [
+      "contestaba",
+      "contestabas",
+      "contestaba",
+      "contestábamos",
+      "contestabais",
+      "contestaban"
+    ],
+    "fut": [
+      "contestaré",
+      "contestarás",
+      "contestará",
+      "contestaremos",
+      "contestaréis",
+      "contestarán"
+    ],
+    "cond": [
+      "contestaría",
+      "contestarías",
+      "contestaría",
+      "contestaríamos",
+      "contestaríais",
+      "contestarían"
+    ],
+    "subjpres": [
+      "conteste",
+      "contestes",
+      "conteste",
+      "contestemos",
+      "contestéis",
+      "contesten"
+    ],
+    "subjimperf": [
+      "contestara",
+      "contestaras",
+      "contestara",
+      "contestáramos",
+      "contestarais",
+      "contestaran"
+    ],
+    "imp": [
+      "contesta",
+      "conteste",
+      "contestemos",
+      "contestad",
+      "contesten"
+    ]
+  },
+  "correr": {
+    "en": "to run",
+    "pres": [
+      "corro",
+      "corres",
+      "corre",
+      "corremos",
+      "corréis",
+      "corren"
+    ],
+    "pret": [
+      "corrí",
+      "corriste",
+      "corrió",
+      "corrimos",
+      "corristeis",
+      "corrieron"
+    ],
+    "imperf": [
+      "corría",
+      "corrías",
+      "corría",
+      "corríamos",
+      "corríais",
+      "corrían"
+    ],
+    "fut": [
+      "correré",
+      "correrás",
+      "correrá",
+      "correremos",
+      "correréis",
+      "correrán"
+    ],
+    "cond": [
+      "correría",
+      "correrías",
+      "correría",
+      "correríamos",
+      "correríais",
+      "correrían"
+    ],
+    "subjpres": [
+      "corra",
+      "corras",
+      "corra",
+      "corramos",
+      "corráis",
+      "corran"
+    ],
+    "subjimperf": [
+      "corriera",
+      "corrieras",
+      "corriera",
+      "corriéramos",
+      "corrierais",
+      "corrieran"
+    ],
+    "imp": [
+      "corre",
+      "corra",
+      "corramos",
+      "corred",
+      "corran"
+    ]
+  },
+  "costar": {
+    "en": "to cost",
+    "pres": [
+      "cuesto",
+      "cuestas",
+      "cuesta",
+      "costamos",
+      "costáis",
+      "cuestan"
+    ],
+    "pret": [
+      "costé",
+      "costaste",
+      "costó",
+      "costamos",
+      "costasteis",
+      "costaron"
+    ],
+    "imperf": [
+      "costaba",
+      "costabas",
+      "costaba",
+      "costábamos",
+      "costabais",
+      "costaban"
+    ],
+    "fut": [
+      "costaré",
+      "costarás",
+      "costará",
+      "costaremos",
+      "costaréis",
+      "costarán"
+    ],
+    "cond": [
+      "costaría",
+      "costarías",
+      "costaría",
+      "costaríamos",
+      "costaríais",
+      "costarían"
+    ],
+    "subjpres": [
+      "cueste",
+      "cuestes",
+      "cueste",
+      "costemos",
+      "costéis",
+      "cuesten"
+    ],
+    "subjimperf": [
+      "costara",
+      "costaras",
+      "costara",
+      "costáramos",
+      "costarais",
+      "costaran"
+    ],
+    "imp": [
+      "cuesta",
+      "cueste",
+      "costemos",
+      "costad",
+      "cuesten"
+    ]
+  },
+  "creer": {
+    "en": "to believe / think",
+    "pres": [
+      "creo",
+      "crees",
+      "cree",
+      "creemos",
+      "creéis",
+      "creen"
+    ],
+    "pret": [
+      "creí",
+      "creíste",
+      "creyó",
+      "creímos",
+      "creísteis",
+      "creyeron"
+    ],
+    "imperf": [
+      "creía",
+      "creías",
+      "creía",
+      "creíamos",
+      "creíais",
+      "creían"
+    ],
+    "fut": [
+      "creeré",
+      "creerás",
+      "creerá",
+      "creeremos",
+      "creeréis",
+      "creerán"
+    ],
+    "cond": [
+      "creería",
+      "creerías",
+      "creería",
+      "creeríamos",
+      "creeríais",
+      "creerían"
+    ],
+    "subjpres": [
+      "crea",
+      "creas",
+      "crea",
+      "creamos",
+      "creáis",
+      "crean"
+    ],
+    "subjimperf": [
+      "creyera",
+      "creyeras",
+      "creyera",
+      "creyéramos",
+      "creyerais",
+      "creyeran"
+    ],
+    "imp": [
+      "cree",
+      "crea",
+      "creamos",
+      "creed",
+      "crean"
+    ]
+  },
+  "dar": {
+    "en": "to give",
+    "pres": [
+      "doy",
+      "das",
+      "da",
+      "damos",
+      "dais",
+      "dan"
+    ],
+    "pret": [
+      "di",
+      "diste",
+      "dio",
+      "dimos",
+      "disteis",
+      "dieron"
+    ],
+    "imperf": [
+      "daba",
+      "dabas",
+      "daba",
+      "dábamos",
+      "dabais",
+      "daban"
+    ],
+    "fut": [
+      "daré",
+      "darás",
+      "dará",
+      "daremos",
+      "daréis",
+      "darán"
+    ],
+    "cond": [
+      "daría",
+      "darías",
+      "daría",
+      "daríamos",
+      "daríais",
+      "darían"
+    ],
+    "subjpres": [
+      "dé",
+      "des",
+      "dé",
+      "demos",
+      "deis",
+      "den"
+    ],
+    "subjimperf": [
+      "diera",
+      "dieras",
+      "diera",
+      "diéramos",
+      "dierais",
+      "dieran"
+    ],
+    "imp": [
+      "da",
+      "dé",
+      "demos",
+      "dad",
+      "den"
+    ]
+  },
+  "deber": {
+    "en": "to owe / must / should",
+    "pres": [
+      "debo",
+      "debes",
+      "debe",
+      "debemos",
+      "debéis",
+      "deben"
+    ],
+    "pret": [
+      "debí",
+      "debiste",
+      "debió",
+      "debimos",
+      "debisteis",
+      "debieron"
+    ],
+    "imperf": [
+      "debía",
+      "debías",
+      "debía",
+      "debíamos",
+      "debíais",
+      "debían"
+    ],
+    "fut": [
+      "deberé",
+      "deberás",
+      "deberá",
+      "deberemos",
+      "deberéis",
+      "deberán"
+    ],
+    "cond": [
+      "debería",
+      "deberías",
+      "debería",
+      "deberíamos",
+      "deberíais",
+      "deberían"
+    ],
+    "subjpres": [
+      "deba",
+      "debas",
+      "deba",
+      "debamos",
+      "debáis",
+      "deban"
+    ],
+    "subjimperf": [
+      "debiera",
+      "debieras",
+      "debiera",
+      "debiéramos",
+      "debierais",
+      "debieran"
+    ],
+    "imp": [
+      "debe",
+      "deba",
+      "debamos",
+      "debed",
+      "deban"
+    ]
+  },
+  "decidir": {
+    "en": "to decide",
+    "pres": [
+      "decido",
+      "decides",
+      "decide",
+      "decidimos",
+      "decidís",
+      "deciden"
+    ],
+    "pret": [
+      "decidí",
+      "decidiste",
+      "decidió",
+      "decidimos",
+      "decidisteis",
+      "decidieron"
+    ],
+    "imperf": [
+      "decidía",
+      "decidías",
+      "decidía",
+      "decidíamos",
+      "decidíais",
+      "decidían"
+    ],
+    "fut": [
+      "decidiré",
+      "decidirás",
+      "decidirá",
+      "decidiremos",
+      "decidiréis",
+      "decidirán"
+    ],
+    "cond": [
+      "decidiría",
+      "decidirías",
+      "decidiría",
+      "decidiríamos",
+      "decidiríais",
+      "decidirían"
+    ],
+    "subjpres": [
+      "decida",
+      "decidas",
+      "decida",
+      "decidamos",
+      "decidáis",
+      "decidan"
+    ],
+    "subjimperf": [
+      "decidiera",
+      "decidieras",
+      "decidiera",
+      "decidiéramos",
+      "decidierais",
+      "decidieran"
+    ],
+    "imp": [
+      "decide",
+      "decida",
+      "decidamos",
+      "decidid",
+      "decidan"
+    ]
+  },
+  "decir": {
+    "en": "to say / tell",
+    "pres": [
+      "digo",
+      "dices",
+      "dice",
+      "decimos",
+      "decís",
+      "dicen"
+    ],
+    "pret": [
+      "dije",
+      "dijiste",
+      "dijo",
+      "dijimos",
+      "dijisteis",
+      "dijeron"
+    ],
+    "imperf": [
+      "decía",
+      "decías",
+      "decía",
+      "decíamos",
+      "decíais",
+      "decían"
+    ],
+    "fut": [
+      "diré",
+      "dirás",
+      "dirá",
+      "diremos",
+      "diréis",
+      "dirán"
+    ],
+    "cond": [
+      "diría",
+      "dirías",
+      "diría",
+      "diríamos",
+      "diríais",
+      "dirían"
+    ],
+    "subjpres": [
+      "diga",
+      "digas",
+      "diga",
+      "digamos",
+      "digáis",
+      "digan"
+    ],
+    "subjimperf": [
+      "dijera",
+      "dijeras",
+      "dijera",
+      "dijéramos",
+      "dijerais",
+      "dijeran"
+    ],
+    "imp": [
+      "di",
+      "diga",
+      "digamos",
+      "decid",
+      "digan"
+    ]
+  },
+  "dejar": {
+    "en": "to leave / let / allow",
+    "pres": [
+      "dejo",
+      "dejas",
+      "deja",
+      "dejamos",
+      "dejáis",
+      "dejan"
+    ],
+    "pret": [
+      "dejé",
+      "dejaste",
+      "dejó",
+      "dejamos",
+      "dejasteis",
+      "dejaron"
+    ],
+    "imperf": [
+      "dejaba",
+      "dejabas",
+      "dejaba",
+      "dejábamos",
+      "dejabais",
+      "dejaban"
+    ],
+    "fut": [
+      "dejaré",
+      "dejarás",
+      "dejará",
+      "dejaremos",
+      "dejaréis",
+      "dejarán"
+    ],
+    "cond": [
+      "dejaría",
+      "dejarías",
+      "dejaría",
+      "dejaríamos",
+      "dejaríais",
+      "dejarían"
+    ],
+    "subjpres": [
+      "deje",
+      "dejes",
+      "deje",
+      "dejemos",
+      "dejéis",
+      "dejen"
+    ],
+    "subjimperf": [
+      "dejara",
+      "dejaras",
+      "dejara",
+      "dejáramos",
+      "dejarais",
+      "dejaran"
+    ],
+    "imp": [
+      "deja",
+      "deje",
+      "dejemos",
+      "dejad",
+      "dejen"
+    ]
+  },
+  "descansar": {
+    "en": "to rest",
+    "pres": [
+      "descanso",
+      "descansas",
+      "descansa",
+      "descansamos",
+      "descansáis",
+      "descansan"
+    ],
+    "pret": [
+      "descansé",
+      "descansaste",
+      "descansó",
+      "descansamos",
+      "descansasteis",
+      "descansaron"
+    ],
+    "imperf": [
+      "descansaba",
+      "descansabas",
+      "descansaba",
+      "descansábamos",
+      "descansabais",
+      "descansaban"
+    ],
+    "fut": [
+      "descansaré",
+      "descansarás",
+      "descansará",
+      "descansaremos",
+      "descansaréis",
+      "descansarán"
+    ],
+    "cond": [
+      "descansaría",
+      "descansarías",
+      "descansaría",
+      "descansaríamos",
+      "descansaríais",
+      "descansarían"
+    ],
+    "subjpres": [
+      "descanse",
+      "descanses",
+      "descanse",
+      "descansemos",
+      "descanséis",
+      "descansen"
+    ],
+    "subjimperf": [
+      "descansara",
+      "descansaras",
+      "descansara",
+      "descansáramos",
+      "descansarais",
+      "descansaran"
+    ],
+    "imp": [
+      "descansa",
+      "descanse",
+      "descansemos",
+      "descansad",
+      "descansen"
+    ]
+  },
+  "dirigir": {
+    "en": "to direct / manage",
+    "pres": [
+      "dirijo",
+      "diriges",
+      "dirige",
+      "dirigimos",
+      "dirigís",
+      "dirigen"
+    ],
+    "pret": [
+      "dirigí",
+      "dirigiste",
+      "dirigió",
+      "dirigimos",
+      "dirigisteis",
+      "dirigieron"
+    ],
+    "imperf": [
+      "dirigía",
+      "dirigías",
+      "dirigía",
+      "dirigíamos",
+      "dirigíais",
+      "dirigían"
+    ],
+    "fut": [
+      "dirigiré",
+      "dirigirás",
+      "dirigirá",
+      "dirigiremos",
+      "dirigiréis",
+      "dirigirán"
+    ],
+    "cond": [
+      "dirigiría",
+      "dirigirías",
+      "dirigiría",
+      "dirigiríamos",
+      "dirigiríais",
+      "dirigirían"
+    ],
+    "subjpres": [
+      "dirija",
+      "dirijas",
+      "dirija",
+      "dirijamos",
+      "dirijáis",
+      "dirijan"
+    ],
+    "subjimperf": [
+      "dirigiera",
+      "dirigieras",
+      "dirigiera",
+      "dirigiéramos",
+      "dirigierais",
+      "dirigieran"
+    ],
+    "imp": [
+      "dirige",
+      "dirija",
+      "dirijamos",
+      "dirigid",
+      "dirijan"
+    ]
+  },
+  "dormir": {
+    "en": "to sleep",
+    "pres": [
+      "duermo",
+      "duermes",
+      "duerme",
+      "dormimos",
+      "dormís",
+      "duermen"
+    ],
+    "pret": [
+      "dormí",
+      "dormiste",
+      "durmió",
+      "dormimos",
+      "dormisteis",
+      "durmieron"
+    ],
+    "imperf": [
+      "dormía",
+      "dormías",
+      "dormía",
+      "dormíamos",
+      "dormíais",
+      "dormían"
+    ],
+    "fut": [
+      "dormiré",
+      "dormirás",
+      "dormirá",
+      "dormiremos",
+      "dormiréis",
+      "dormirán"
+    ],
+    "cond": [
+      "dormiría",
+      "dormirías",
+      "dormiría",
+      "dormiríamos",
+      "dormiríais",
+      "dormirían"
+    ],
+    "subjpres": [
+      "duerma",
+      "duermas",
+      "duerma",
+      "durmamos",
+      "durmáis",
+      "duerman"
+    ],
+    "subjimperf": [
+      "durmiera",
+      "durmieras",
+      "durmiera",
+      "durmiéramos",
+      "durmierais",
+      "durmieran"
+    ],
+    "imp": [
+      "duerme",
+      "duerma",
+      "durmamos",
+      "dormid",
+      "duerman"
+    ]
+  },
+  "empezar": {
+    "en": "to start / begin",
+    "pres": [
+      "empiezo",
+      "empiezas",
+      "empieza",
+      "empezamos",
+      "empezáis",
+      "empiezan"
+    ],
+    "pret": [
+      "empecé",
+      "empezaste",
+      "empezó",
+      "empezamos",
+      "empezasteis",
+      "empezaron"
+    ],
+    "imperf": [
+      "empezaba",
+      "empezabas",
+      "empezaba",
+      "empezábamos",
+      "empezabais",
+      "empezaban"
+    ],
+    "fut": [
+      "empezaré",
+      "empezarás",
+      "empezará",
+      "empezaremos",
+      "empezaréis",
+      "empezarán"
+    ],
+    "cond": [
+      "empezaría",
+      "empezarías",
+      "empezaría",
+      "empezaríamos",
+      "empezaríais",
+      "empezarían"
+    ],
+    "subjpres": [
+      "empiece",
+      "empieces",
+      "empiece",
+      "empecemos",
+      "empecéis",
+      "empiecen"
+    ],
+    "subjimperf": [
+      "empezara",
+      "empezaras",
+      "empezara",
+      "empezáramos",
+      "empezarais",
+      "empezaran"
+    ],
+    "imp": [
+      "empieza",
+      "empiece",
+      "empecemos",
+      "empezad",
+      "empiecen"
+    ]
+  },
+  "encontrar": {
+    "en": "to find / meet",
+    "pres": [
+      "encuentro",
+      "encuentras",
+      "encuentra",
+      "encontramos",
+      "encontráis",
+      "encuentran"
+    ],
+    "pret": [
+      "encontré",
+      "encontraste",
+      "encontró",
+      "encontramos",
+      "encontrasteis",
+      "encontraron"
+    ],
+    "imperf": [
+      "encontraba",
+      "encontrabas",
+      "encontraba",
+      "encontrábamos",
+      "encontrabais",
+      "encontraban"
+    ],
+    "fut": [
+      "encontraré",
+      "encontrarás",
+      "encontrará",
+      "encontraremos",
+      "encontraréis",
+      "encontrarán"
+    ],
+    "cond": [
+      "encontraría",
+      "encontrarías",
+      "encontraría",
+      "encontraríamos",
+      "encontraríais",
+      "encontrarían"
+    ],
+    "subjpres": [
+      "encuentre",
+      "encuentres",
+      "encuentre",
+      "encontremos",
+      "encontréis",
+      "encuentren"
+    ],
+    "subjimperf": [
+      "encontrara",
+      "encontraras",
+      "encontrara",
+      "encontráramos",
+      "encontrarais",
+      "encontraran"
+    ],
+    "imp": [
+      "encuentra",
+      "encuentre",
+      "encontremos",
+      "encontrad",
+      "encuentren"
+    ]
+  },
+  "entender": {
+    "en": "to understand",
+    "pres": [
+      "entiendo",
+      "entiendes",
+      "entiende",
+      "entendemos",
+      "entendéis",
+      "entienden"
+    ],
+    "pret": [
+      "entendí",
+      "entendiste",
+      "entendió",
+      "entendimos",
+      "entendisteis",
+      "entendieron"
+    ],
+    "imperf": [
+      "entendía",
+      "entendías",
+      "entendía",
+      "entendíamos",
+      "entendíais",
+      "entendían"
+    ],
+    "fut": [
+      "entenderé",
+      "entenderás",
+      "entenderá",
+      "entenderemos",
+      "entenderéis",
+      "entenderán"
+    ],
+    "cond": [
+      "entendería",
+      "entenderías",
+      "entendería",
+      "entenderíamos",
+      "entenderíais",
+      "entenderían"
+    ],
+    "subjpres": [
+      "entienda",
+      "entiendas",
+      "entienda",
+      "entendamos",
+      "entendáis",
+      "entiendan"
+    ],
+    "subjimperf": [
+      "entendiera",
+      "entendieras",
+      "entendiera",
+      "entendiéramos",
+      "entendierais",
+      "entendieran"
+    ],
+    "imp": [
+      "entiende",
+      "entienda",
+      "entendamos",
+      "entended",
+      "entiendan"
+    ]
+  },
+  "enviar": {
+    "en": "to send",
+    "pres": [
+      "envío",
+      "envías",
+      "envía",
+      "enviamos",
+      "enviáis",
+      "envían"
+    ],
+    "pret": [
+      "envié",
+      "enviaste",
+      "envió",
+      "enviamos",
+      "enviasteis",
+      "enviaron"
+    ],
+    "imperf": [
+      "enviaba",
+      "enviabas",
+      "enviaba",
+      "enviábamos",
+      "enviabais",
+      "enviaban"
+    ],
+    "fut": [
+      "enviaré",
+      "enviarás",
+      "enviará",
+      "enviaremos",
+      "enviaréis",
+      "enviarán"
+    ],
+    "cond": [
+      "enviaría",
+      "enviarías",
+      "enviaría",
+      "enviaríamos",
+      "enviaríais",
+      "enviarían"
+    ],
+    "subjpres": [
+      "envíe",
+      "envíes",
+      "envíe",
+      "enviemos",
+      "enviéis",
+      "envíen"
+    ],
+    "subjimperf": [
+      "enviara",
+      "enviaras",
+      "enviara",
+      "enviáramos",
+      "enviarais",
+      "enviaran"
+    ],
+    "imp": [
+      "envía",
+      "envíe",
+      "enviemos",
+      "enviad",
+      "envíen"
+    ]
+  },
+  "escribir": {
+    "en": "to write",
+    "pres": [
+      "escribo",
+      "escribes",
+      "escribe",
+      "escribimos",
+      "escribís",
+      "escriben"
+    ],
+    "pret": [
+      "escribí",
+      "escribiste",
+      "escribió",
+      "escribimos",
+      "escribisteis",
+      "escribieron"
+    ],
+    "imperf": [
+      "escribía",
+      "escribías",
+      "escribía",
+      "escribíamos",
+      "escribíais",
+      "escribían"
+    ],
+    "fut": [
+      "escribiré",
+      "escribirás",
+      "escribirá",
+      "escribiremos",
+      "escribiréis",
+      "escribirán"
+    ],
+    "cond": [
+      "escribiría",
+      "escribirías",
+      "escribiría",
+      "escribiríamos",
+      "escribiríais",
+      "escribirían"
+    ],
+    "subjpres": [
+      "escriba",
+      "escribas",
+      "escriba",
+      "escribamos",
+      "escribáis",
+      "escriban"
+    ],
+    "subjimperf": [
+      "escribiera",
+      "escribieras",
+      "escribiera",
+      "escribiéramos",
+      "escribierais",
+      "escribieran"
+    ],
+    "imp": [
+      "escribe",
+      "escriba",
+      "escribamos",
+      "escribid",
+      "escriban"
+    ]
+  },
+  "escuchar": {
+    "en": "to listen (to)",
+    "pres": [
+      "escucho",
+      "escuchas",
+      "escucha",
+      "escuchamos",
+      "escucháis",
+      "escuchan"
+    ],
+    "pret": [
+      "escuché",
+      "escuchaste",
+      "escuchó",
+      "escuchamos",
+      "escuchasteis",
+      "escucharon"
+    ],
+    "imperf": [
+      "escuchaba",
+      "escuchabas",
+      "escuchaba",
+      "escuchábamos",
+      "escuchabais",
+      "escuchaban"
+    ],
+    "fut": [
+      "escucharé",
+      "escucharás",
+      "escuchará",
+      "escucharemos",
+      "escucharéis",
+      "escucharán"
+    ],
+    "cond": [
+      "escucharía",
+      "escucharías",
+      "escucharía",
+      "escucharíamos",
+      "escucharíais",
+      "escucharían"
+    ],
+    "subjpres": [
+      "escuche",
+      "escuches",
+      "escuche",
+      "escuchemos",
+      "escuchéis",
+      "escuchen"
+    ],
+    "subjimperf": [
+      "escuchara",
+      "escucharas",
+      "escuchara",
+      "escucháramos",
+      "escucharais",
+      "escucharan"
+    ],
+    "imp": [
+      "escucha",
+      "escuche",
+      "escuchemos",
+      "escuchad",
+      "escuchen"
+    ]
+  },
+  "esperar": {
+    "en": "to wait / hope / expect",
+    "pres": [
+      "espero",
+      "esperas",
+      "espera",
+      "esperamos",
+      "esperáis",
+      "esperan"
+    ],
+    "pret": [
+      "esperé",
+      "esperaste",
+      "esperó",
+      "esperamos",
+      "esperasteis",
+      "esperaron"
+    ],
+    "imperf": [
+      "esperaba",
+      "esperabas",
+      "esperaba",
+      "esperábamos",
+      "esperabais",
+      "esperaban"
+    ],
+    "fut": [
+      "esperaré",
+      "esperarás",
+      "esperará",
+      "esperaremos",
+      "esperaréis",
+      "esperarán"
+    ],
+    "cond": [
+      "esperaría",
+      "esperarías",
+      "esperaría",
+      "esperaríamos",
+      "esperaríais",
+      "esperarían"
+    ],
+    "subjpres": [
+      "espere",
+      "esperes",
+      "espere",
+      "esperemos",
+      "esperéis",
+      "esperen"
+    ],
+    "subjimperf": [
+      "esperara",
+      "esperaras",
+      "esperara",
+      "esperáramos",
+      "esperarais",
+      "esperaran"
+    ],
+    "imp": [
+      "espera",
+      "espere",
+      "esperemos",
+      "esperad",
+      "esperen"
+    ]
+  },
+  "estar": {
+    "en": "to be (state/location)",
+    "pres": [
+      "estoy",
+      "estás",
+      "está",
+      "estamos",
+      "estáis",
+      "están"
+    ],
+    "pret": [
+      "estuve",
+      "estuviste",
+      "estuvo",
+      "estuvimos",
+      "estuvisteis",
+      "estuvieron"
+    ],
+    "imperf": [
+      "estaba",
+      "estabas",
+      "estaba",
+      "estábamos",
+      "estabais",
+      "estaban"
+    ],
+    "fut": [
+      "estaré",
+      "estarás",
+      "estará",
+      "estaremos",
+      "estaréis",
+      "estarán"
+    ],
+    "cond": [
+      "estaría",
+      "estarías",
+      "estaría",
+      "estaríamos",
+      "estaríais",
+      "estarían"
+    ],
+    "subjpres": [
+      "esté",
+      "estés",
+      "esté",
+      "estemos",
+      "estéis",
+      "estén"
+    ],
+    "subjimperf": [
+      "estuviera",
+      "estuvieras",
+      "estuviera",
+      "estuviéramos",
+      "estuvierais",
+      "estuvieran"
+    ],
+    "imp": [
+      "está",
+      "esté",
+      "estemos",
+      "estad",
+      "estén"
+    ]
+  },
+  "estudiar": {
+    "en": "to study",
+    "pres": [
+      "estudio",
+      "estudias",
+      "estudia",
+      "estudiamos",
+      "estudiáis",
+      "estudian"
+    ],
+    "pret": [
+      "estudié",
+      "estudiaste",
+      "estudió",
+      "estudiamos",
+      "estudiasteis",
+      "estudiaron"
+    ],
+    "imperf": [
+      "estudiaba",
+      "estudiabas",
+      "estudiaba",
+      "estudiábamos",
+      "estudiabais",
+      "estudiaban"
+    ],
+    "fut": [
+      "estudiaré",
+      "estudiarás",
+      "estudiará",
+      "estudiaremos",
+      "estudiaréis",
+      "estudiarán"
+    ],
+    "cond": [
+      "estudiaría",
+      "estudiarías",
+      "estudiaría",
+      "estudiaríamos",
+      "estudiaríais",
+      "estudiarían"
+    ],
+    "subjpres": [
+      "estudie",
+      "estudies",
+      "estudie",
+      "estudiemos",
+      "estudiéis",
+      "estudien"
+    ],
+    "subjimperf": [
+      "estudiara",
+      "estudiaras",
+      "estudiara",
+      "estudiáramos",
+      "estudiarais",
+      "estudiaran"
+    ],
+    "imp": [
+      "estudia",
+      "estudie",
+      "estudiemos",
+      "estudiad",
+      "estudien"
+    ]
+  },
+  "explicar": {
+    "en": "to explain",
+    "pres": [
+      "explico",
+      "explicas",
+      "explica",
+      "explicamos",
+      "explicáis",
+      "explican"
+    ],
+    "pret": [
+      "expliqué",
+      "explicaste",
+      "explicó",
+      "explicamos",
+      "explicasteis",
+      "explicaron"
+    ],
+    "imperf": [
+      "explicaba",
+      "explicabas",
+      "explicaba",
+      "explicábamos",
+      "explicabais",
+      "explicaban"
+    ],
+    "fut": [
+      "explicaré",
+      "explicarás",
+      "explicará",
+      "explicaremos",
+      "explicaréis",
+      "explicarán"
+    ],
+    "cond": [
+      "explicaría",
+      "explicarías",
+      "explicaría",
+      "explicaríamos",
+      "explicaríais",
+      "explicarían"
+    ],
+    "subjpres": [
+      "explique",
+      "expliques",
+      "explique",
+      "expliquemos",
+      "expliquéis",
+      "expliquen"
+    ],
+    "subjimperf": [
+      "explicara",
+      "explicaras",
+      "explicara",
+      "explicáramos",
+      "explicarais",
+      "explicaran"
+    ],
+    "imp": [
+      "explica",
+      "explique",
+      "expliquemos",
+      "explicad",
+      "expliquen"
+    ]
+  },
+  "ganar": {
+    "en": "to win / earn",
+    "pres": [
+      "gano",
+      "ganas",
+      "gana",
+      "ganamos",
+      "ganáis",
+      "ganan"
+    ],
+    "pret": [
+      "gané",
+      "ganaste",
+      "ganó",
+      "ganamos",
+      "ganasteis",
+      "ganaron"
+    ],
+    "imperf": [
+      "ganaba",
+      "ganabas",
+      "ganaba",
+      "ganábamos",
+      "ganabais",
+      "ganaban"
+    ],
+    "fut": [
+      "ganaré",
+      "ganarás",
+      "ganará",
+      "ganaremos",
+      "ganaréis",
+      "ganarán"
+    ],
+    "cond": [
+      "ganaría",
+      "ganarías",
+      "ganaría",
+      "ganaríamos",
+      "ganaríais",
+      "ganarían"
+    ],
+    "subjpres": [
+      "gane",
+      "ganes",
+      "gane",
+      "ganemos",
+      "ganéis",
+      "ganen"
+    ],
+    "subjimperf": [
+      "ganara",
+      "ganaras",
+      "ganara",
+      "ganáramos",
+      "ganarais",
+      "ganaran"
+    ],
+    "imp": [
+      "gana",
+      "gane",
+      "ganemos",
+      "ganad",
+      "ganen"
+    ]
+  },
+  "gustar": {
+    "en": "to like / be pleasing to",
+    "pres": [
+      "gusto",
+      "gustas",
+      "gusta",
+      "gustamos",
+      "gustáis",
+      "gustan"
+    ],
+    "pret": [
+      "gusté",
+      "gustaste",
+      "gustó",
+      "gustamos",
+      "gustasteis",
+      "gustaron"
+    ],
+    "imperf": [
+      "gustaba",
+      "gustabas",
+      "gustaba",
+      "gustábamos",
+      "gustabais",
+      "gustaban"
+    ],
+    "fut": [
+      "gustaré",
+      "gustarás",
+      "gustará",
+      "gustaremos",
+      "gustaréis",
+      "gustarán"
+    ],
+    "cond": [
+      "gustaría",
+      "gustarías",
+      "gustaría",
+      "gustaríamos",
+      "gustaríais",
+      "gustarían"
+    ],
+    "subjpres": [
+      "guste",
+      "gustes",
+      "guste",
+      "gustemos",
+      "gustéis",
+      "gusten"
+    ],
+    "subjimperf": [
+      "gustara",
+      "gustaras",
+      "gustara",
+      "gustáramos",
+      "gustarais",
+      "gustaran"
+    ],
+    "imp": [
+      "gusta",
+      "guste",
+      "gustemos",
+      "gustad",
+      "gusten"
+    ]
+  },
+  "hablar": {
+    "en": "to speak / talk",
+    "pres": [
+      "hablo",
+      "hablas",
+      "habla",
+      "hablamos",
+      "habláis",
+      "hablan"
+    ],
+    "pret": [
+      "hablé",
+      "hablaste",
+      "habló",
+      "hablamos",
+      "hablasteis",
+      "hablaron"
+    ],
+    "imperf": [
+      "hablaba",
+      "hablabas",
+      "hablaba",
+      "hablábamos",
+      "hablabais",
+      "hablaban"
+    ],
+    "fut": [
+      "hablaré",
+      "hablarás",
+      "hablará",
+      "hablaremos",
+      "hablaréis",
+      "hablarán"
+    ],
+    "cond": [
+      "hablaría",
+      "hablarías",
+      "hablaría",
+      "hablaríamos",
+      "hablaríais",
+      "hablarían"
+    ],
+    "subjpres": [
+      "hable",
+      "hables",
+      "hable",
+      "hablemos",
+      "habléis",
+      "hablen"
+    ],
+    "subjimperf": [
+      "hablara",
+      "hablaras",
+      "hablara",
+      "habláramos",
+      "hablarais",
+      "hablaran"
+    ],
+    "imp": [
+      "habla",
+      "hable",
+      "hablemos",
+      "hablad",
+      "hablen"
+    ]
+  },
+  "hacer": {
+    "en": "to do / make",
+    "pres": [
+      "hago",
+      "haces",
+      "hace",
+      "hacemos",
+      "hacéis",
+      "hacen"
+    ],
+    "pret": [
+      "hice",
+      "hiciste",
+      "hizo",
+      "hicimos",
+      "hicisteis",
+      "hicieron"
+    ],
+    "imperf": [
+      "hacía",
+      "hacías",
+      "hacía",
+      "hacíamos",
+      "hacíais",
+      "hacían"
+    ],
+    "fut": [
+      "haré",
+      "harás",
+      "hará",
+      "haremos",
+      "haréis",
+      "harán"
+    ],
+    "cond": [
+      "haría",
+      "harías",
+      "haría",
+      "haríamos",
+      "haríais",
+      "harían"
+    ],
+    "subjpres": [
+      "haga",
+      "hagas",
+      "haga",
+      "hagamos",
+      "hagáis",
+      "hagan"
+    ],
+    "subjimperf": [
+      "hiciera",
+      "hicieras",
+      "hiciera",
+      "hiciéramos",
+      "hicierais",
+      "hicieran"
+    ],
+    "imp": [
+      "haz",
+      "haga",
+      "hagamos",
+      "haced",
+      "hagan"
+    ]
+  },
+  "ir": {
+    "en": "to go",
+    "pres": [
+      "voy",
+      "vas",
+      "va",
+      "vamos",
+      "vais",
+      "van"
+    ],
+    "pret": [
+      "fui",
+      "fuiste",
+      "fue",
+      "fuimos",
+      "fuisteis",
+      "fueron"
+    ],
+    "imperf": [
+      "iba",
+      "ibas",
+      "iba",
+      "íbamos",
+      "ibais",
+      "iban"
+    ],
+    "fut": [
+      "iré",
+      "irás",
+      "irá",
+      "iremos",
+      "iréis",
+      "irán"
+    ],
+    "cond": [
+      "iría",
+      "irías",
+      "iría",
+      "iríamos",
+      "iríais",
+      "irían"
+    ],
+    "subjpres": [
+      "vaya",
+      "vayas",
+      "vaya",
+      "vayamos",
+      "vayáis",
+      "vayan"
+    ],
+    "subjimperf": [
+      "fuera",
+      "fueras",
+      "fuera",
+      "fuéramos",
+      "fuerais",
+      "fueran"
+    ],
+    "imp": [
+      "ve",
+      "vaya",
+      "vayamos",
+      "id",
+      "vayan"
+    ]
+  },
+  "jugar": {
+    "en": "to play (sport/game)",
+    "pres": [
+      "juego",
+      "juegas",
+      "juega",
+      "jugamos",
+      "jugáis",
+      "juegan"
+    ],
+    "pret": [
+      "jugué",
+      "jugaste",
+      "jugó",
+      "jugamos",
+      "jugasteis",
+      "jugaron"
+    ],
+    "imperf": [
+      "jugaba",
+      "jugabas",
+      "jugaba",
+      "jugábamos",
+      "jugabais",
+      "jugaban"
+    ],
+    "fut": [
+      "jugaré",
+      "jugarás",
+      "jugará",
+      "jugaremos",
+      "jugaréis",
+      "jugarán"
+    ],
+    "cond": [
+      "jugaría",
+      "jugarías",
+      "jugaría",
+      "jugaríamos",
+      "jugaríais",
+      "jugarían"
+    ],
+    "subjpres": [
+      "juegue",
+      "juegues",
+      "juegue",
+      "juguemos",
+      "juguéis",
+      "jueguen"
+    ],
+    "subjimperf": [
+      "jugara",
+      "jugaras",
+      "jugara",
+      "jugáramos",
+      "jugarais",
+      "jugaran"
+    ],
+    "imp": [
+      "juega",
+      "juegue",
+      "juguemos",
+      "jugad",
+      "jueguen"
+    ]
+  },
+  "lavar": {
+    "en": "to wash",
+    "pres": [
+      "lavo",
+      "lavas",
+      "lava",
+      "lavamos",
+      "laváis",
+      "lavan"
+    ],
+    "pret": [
+      "lavé",
+      "lavaste",
+      "lavó",
+      "lavamos",
+      "lavasteis",
+      "lavaron"
+    ],
+    "imperf": [
+      "lavaba",
+      "lavabas",
+      "lavaba",
+      "lavábamos",
+      "lavabais",
+      "lavaban"
+    ],
+    "fut": [
+      "lavaré",
+      "lavarás",
+      "lavará",
+      "lavaremos",
+      "lavaréis",
+      "lavarán"
+    ],
+    "cond": [
+      "lavaría",
+      "lavarías",
+      "lavaría",
+      "lavaríamos",
+      "lavaríais",
+      "lavarían"
+    ],
+    "subjpres": [
+      "lave",
+      "laves",
+      "lave",
+      "lavemos",
+      "lavéis",
+      "laven"
+    ],
+    "subjimperf": [
+      "lavara",
+      "lavaras",
+      "lavara",
+      "laváramos",
+      "lavarais",
+      "lavaran"
+    ],
+    "imp": [
+      "lava",
+      "lave",
+      "lavemos",
+      "lavad",
+      "laven"
+    ]
+  },
+  "leer": {
+    "en": "to read",
+    "pres": [
+      "leo",
+      "lees",
+      "lee",
+      "leemos",
+      "leéis",
+      "leen"
+    ],
+    "pret": [
+      "leí",
+      "leíste",
+      "leyó",
+      "leímos",
+      "leísteis",
+      "leyeron"
+    ],
+    "imperf": [
+      "leía",
+      "leías",
+      "leía",
+      "leíamos",
+      "leíais",
+      "leían"
+    ],
+    "fut": [
+      "leeré",
+      "leerás",
+      "leerá",
+      "leeremos",
+      "leeréis",
+      "leerán"
+    ],
+    "cond": [
+      "leería",
+      "leerías",
+      "leería",
+      "leeríamos",
+      "leeríais",
+      "leerían"
+    ],
+    "subjpres": [
+      "lea",
+      "leas",
+      "lea",
+      "leamos",
+      "leáis",
+      "lean"
+    ],
+    "subjimperf": [
+      "leyera",
+      "leyeras",
+      "leyera",
+      "leyéramos",
+      "leyerais",
+      "leyeran"
+    ],
+    "imp": [
+      "lee",
+      "lea",
+      "leamos",
+      "leed",
+      "lean"
+    ]
+  },
+  "llamar": {
+    "en": "to call",
+    "pres": [
+      "llamo",
+      "llamas",
+      "llama",
+      "llamamos",
+      "llamáis",
+      "llaman"
+    ],
+    "pret": [
+      "llamé",
+      "llamaste",
+      "llamó",
+      "llamamos",
+      "llamasteis",
+      "llamaron"
+    ],
+    "imperf": [
+      "llamaba",
+      "llamabas",
+      "llamaba",
+      "llamábamos",
+      "llamabais",
+      "llamaban"
+    ],
+    "fut": [
+      "llamaré",
+      "llamarás",
+      "llamará",
+      "llamaremos",
+      "llamaréis",
+      "llamarán"
+    ],
+    "cond": [
+      "llamaría",
+      "llamarías",
+      "llamaría",
+      "llamaríamos",
+      "llamaríais",
+      "llamarían"
+    ],
+    "subjpres": [
+      "llame",
+      "llames",
+      "llame",
+      "llamemos",
+      "llaméis",
+      "llamen"
+    ],
+    "subjimperf": [
+      "llamara",
+      "llamaras",
+      "llamara",
+      "llamáramos",
+      "llamarais",
+      "llamaran"
+    ],
+    "imp": [
+      "llama",
+      "llame",
+      "llamemos",
+      "llamad",
+      "llamen"
+    ]
+  },
+  "llegar": {
+    "en": "to arrive / reach",
+    "pres": [
+      "llego",
+      "llegas",
+      "llega",
+      "llegamos",
+      "llegáis",
+      "llegan"
+    ],
+    "pret": [
+      "llegué",
+      "llegaste",
+      "llegó",
+      "llegamos",
+      "llegasteis",
+      "llegaron"
+    ],
+    "imperf": [
+      "llegaba",
+      "llegabas",
+      "llegaba",
+      "llegábamos",
+      "llegabais",
+      "llegaban"
+    ],
+    "fut": [
+      "llegaré",
+      "llegarás",
+      "llegará",
+      "llegaremos",
+      "llegaréis",
+      "llegarán"
+    ],
+    "cond": [
+      "llegaría",
+      "llegarías",
+      "llegaría",
+      "llegaríamos",
+      "llegaríais",
+      "llegarían"
+    ],
+    "subjpres": [
+      "llegue",
+      "llegues",
+      "llegue",
+      "lleguemos",
+      "lleguéis",
+      "lleguen"
+    ],
+    "subjimperf": [
+      "llegara",
+      "llegaras",
+      "llegara",
+      "llegáramos",
+      "llegarais",
+      "llegaran"
+    ],
+    "imp": [
+      "llega",
+      "llegue",
+      "lleguemos",
+      "llegad",
+      "lleguen"
+    ]
+  },
+  "llevar": {
+    "en": "to carry / wear / take",
+    "pres": [
+      "llevo",
+      "llevas",
+      "lleva",
+      "llevamos",
+      "lleváis",
+      "llevan"
+    ],
+    "pret": [
+      "llevé",
+      "llevaste",
+      "llevó",
+      "llevamos",
+      "llevasteis",
+      "llevaron"
+    ],
+    "imperf": [
+      "llevaba",
+      "llevabas",
+      "llevaba",
+      "llevábamos",
+      "llevabais",
+      "llevaban"
+    ],
+    "fut": [
+      "llevaré",
+      "llevarás",
+      "llevará",
+      "llevaremos",
+      "llevaréis",
+      "llevarán"
+    ],
+    "cond": [
+      "llevaría",
+      "llevarías",
+      "llevaría",
+      "llevaríamos",
+      "llevaríais",
+      "llevarían"
+    ],
+    "subjpres": [
+      "lleve",
+      "lleves",
+      "lleve",
+      "llevemos",
+      "llevéis",
+      "lleven"
+    ],
+    "subjimperf": [
+      "llevara",
+      "llevaras",
+      "llevara",
+      "lleváramos",
+      "llevarais",
+      "llevaran"
+    ],
+    "imp": [
+      "lleva",
+      "lleve",
+      "llevemos",
+      "llevad",
+      "lleven"
+    ]
+  },
+  "mentir": {
+    "en": "to lie / tell a lie",
+    "pres": [
+      "miento",
+      "mientes",
+      "miente",
+      "mentimos",
+      "mentís",
+      "mienten"
+    ],
+    "pret": [
+      "mentí",
+      "mentiste",
+      "mintió",
+      "mentimos",
+      "mentisteis",
+      "mintieron"
+    ],
+    "imperf": [
+      "mentía",
+      "mentías",
+      "mentía",
+      "mentíamos",
+      "mentíais",
+      "mentían"
+    ],
+    "fut": [
+      "mentiré",
+      "mentirás",
+      "mentirá",
+      "mentiremos",
+      "mentiréis",
+      "mentirán"
+    ],
+    "cond": [
+      "mentiría",
+      "mentirías",
+      "mentiría",
+      "mentiríamos",
+      "mentiríais",
+      "mentirían"
+    ],
+    "subjpres": [
+      "mienta",
+      "mientas",
+      "mienta",
+      "mintamos",
+      "mintáis",
+      "mientan"
+    ],
+    "subjimperf": [
+      "mintiera",
+      "mintieras",
+      "mintiera",
+      "mintiéramos",
+      "mintierais",
+      "mintieran"
+    ],
+    "imp": [
+      "miente",
+      "mienta",
+      "mintamos",
+      "mentid",
+      "mientan"
+    ]
+  },
+  "mirar": {
+    "en": "to look at / watch",
+    "pres": [
+      "miro",
+      "miras",
+      "mira",
+      "miramos",
+      "miráis",
+      "miran"
+    ],
+    "pret": [
+      "miré",
+      "miraste",
+      "miró",
+      "miramos",
+      "mirasteis",
+      "miraron"
+    ],
+    "imperf": [
+      "miraba",
+      "mirabas",
+      "miraba",
+      "mirábamos",
+      "mirabais",
+      "miraban"
+    ],
+    "fut": [
+      "miraré",
+      "mirarás",
+      "mirará",
+      "miraremos",
+      "miraréis",
+      "mirarán"
+    ],
+    "cond": [
+      "miraría",
+      "mirarías",
+      "miraría",
+      "miraríamos",
+      "miraríais",
+      "mirarían"
+    ],
+    "subjpres": [
+      "mire",
+      "mires",
+      "mire",
+      "miremos",
+      "miréis",
+      "miren"
+    ],
+    "subjimperf": [
+      "mirara",
+      "miraras",
+      "mirara",
+      "miráramos",
+      "mirarais",
+      "miraran"
+    ],
+    "imp": [
+      "mira",
+      "mire",
+      "miremos",
+      "mirad",
+      "miren"
+    ]
+  },
+  "morir": {
+    "en": "to die",
+    "pres": [
+      "muero",
+      "mueres",
+      "muere",
+      "morimos",
+      "morís",
+      "mueren"
+    ],
+    "pret": [
+      "morí",
+      "moriste",
+      "murió",
+      "morimos",
+      "moristeis",
+      "murieron"
+    ],
+    "imperf": [
+      "moría",
+      "morías",
+      "moría",
+      "moríamos",
+      "moríais",
+      "morían"
+    ],
+    "fut": [
+      "moriré",
+      "morirás",
+      "morirá",
+      "moriremos",
+      "moriréis",
+      "morirán"
+    ],
+    "cond": [
+      "moriría",
+      "morirías",
+      "moriría",
+      "moriríamos",
+      "moriríais",
+      "morirían"
+    ],
+    "subjpres": [
+      "muera",
+      "mueras",
+      "muera",
+      "muramos",
+      "muráis",
+      "mueran"
+    ],
+    "subjimperf": [
+      "muriera",
+      "murieras",
+      "muriera",
+      "muriéramos",
+      "murierais",
+      "murieran"
+    ],
+    "imp": [
+      "muere",
+      "muera",
+      "muramos",
+      "morid",
+      "mueran"
+    ]
+  },
+  "mostrar": {
+    "en": "to show",
+    "pres": [
+      "muestro",
+      "muestras",
+      "muestra",
+      "mostramos",
+      "mostráis",
+      "muestran"
+    ],
+    "pret": [
+      "mostré",
+      "mostraste",
+      "mostró",
+      "mostramos",
+      "mostrasteis",
+      "mostraron"
+    ],
+    "imperf": [
+      "mostraba",
+      "mostrabas",
+      "mostraba",
+      "mostrábamos",
+      "mostrabais",
+      "mostraban"
+    ],
+    "fut": [
+      "mostraré",
+      "mostrarás",
+      "mostrará",
+      "mostraremos",
+      "mostraréis",
+      "mostrarán"
+    ],
+    "cond": [
+      "mostraría",
+      "mostrarías",
+      "mostraría",
+      "mostraríamos",
+      "mostraríais",
+      "mostrarían"
+    ],
+    "subjpres": [
+      "muestre",
+      "muestres",
+      "muestre",
+      "mostremos",
+      "mostréis",
+      "muestren"
+    ],
+    "subjimperf": [
+      "mostrara",
+      "mostraras",
+      "mostrara",
+      "mostráramos",
+      "mostrarais",
+      "mostraran"
+    ],
+    "imp": [
+      "muestra",
+      "muestre",
+      "mostremos",
+      "mostrad",
+      "muestren"
+    ]
+  },
+  "nadar": {
+    "en": "to swim",
+    "pres": [
+      "nado",
+      "nadas",
+      "nada",
+      "nadamos",
+      "nadáis",
+      "nadan"
+    ],
+    "pret": [
+      "nadé",
+      "nadaste",
+      "nadó",
+      "nadamos",
+      "nadasteis",
+      "nadaron"
+    ],
+    "imperf": [
+      "nadaba",
+      "nadabas",
+      "nadaba",
+      "nadábamos",
+      "nadabais",
+      "nadaban"
+    ],
+    "fut": [
+      "nadaré",
+      "nadarás",
+      "nadará",
+      "nadaremos",
+      "nadaréis",
+      "nadarán"
+    ],
+    "cond": [
+      "nadaría",
+      "nadarías",
+      "nadaría",
+      "nadaríamos",
+      "nadaríais",
+      "nadarían"
+    ],
+    "subjpres": [
+      "nade",
+      "nades",
+      "nade",
+      "nademos",
+      "nadéis",
+      "naden"
+    ],
+    "subjimperf": [
+      "nadara",
+      "nadaras",
+      "nadara",
+      "nadáramos",
+      "nadarais",
+      "nadaran"
+    ],
+    "imp": [
+      "nada",
+      "nade",
+      "nademos",
+      "nadad",
+      "naden"
+    ]
+  },
+  "necesitar": {
+    "en": "to need",
+    "pres": [
+      "necesito",
+      "necesitas",
+      "necesita",
+      "necesitamos",
+      "necesitáis",
+      "necesitan"
+    ],
+    "pret": [
+      "necesité",
+      "necesitaste",
+      "necesitó",
+      "necesitamos",
+      "necesitasteis",
+      "necesitaron"
+    ],
+    "imperf": [
+      "necesitaba",
+      "necesitabas",
+      "necesitaba",
+      "necesitábamos",
+      "necesitabais",
+      "necesitaban"
+    ],
+    "fut": [
+      "necesitaré",
+      "necesitarás",
+      "necesitará",
+      "necesitaremos",
+      "necesitaréis",
+      "necesitarán"
+    ],
+    "cond": [
+      "necesitaría",
+      "necesitarías",
+      "necesitaría",
+      "necesitaríamos",
+      "necesitaríais",
+      "necesitarían"
+    ],
+    "subjpres": [
+      "necesite",
+      "necesites",
+      "necesite",
+      "necesitemos",
+      "necesitéis",
+      "necesiten"
+    ],
+    "subjimperf": [
+      "necesitara",
+      "necesitaras",
+      "necesitara",
+      "necesitáramos",
+      "necesitarais",
+      "necesitaran"
+    ],
+    "imp": [
+      "necesita",
+      "necesite",
+      "necesitemos",
+      "necesitad",
+      "necesiten"
+    ]
+  },
+  "oir": {
+    "en": "to hear",
+    "pres": [
+      "oigo",
+      "oyes",
+      "oye",
+      "oímos",
+      "oís",
+      "oyen"
+    ],
+    "pret": [
+      "oí",
+      "oíste",
+      "oyó",
+      "oímos",
+      "oísteis",
+      "oyeron"
+    ],
+    "imperf": [
+      "oía",
+      "oías",
+      "oía",
+      "oíamos",
+      "oíais",
+      "oían"
+    ],
+    "fut": [
+      "oiré",
+      "oirás",
+      "oirá",
+      "oiremos",
+      "oiréis",
+      "oirán"
+    ],
+    "cond": [
+      "oiría",
+      "oirías",
+      "oiría",
+      "oiríamos",
+      "oiríais",
+      "oirían"
+    ],
+    "subjpres": [
+      "oiga",
+      "oigas",
+      "oiga",
+      "oigamos",
+      "oigáis",
+      "oigan"
+    ],
+    "subjimperf": [
+      "oyera",
+      "oyeras",
+      "oyera",
+      "oyéramos",
+      "oyerais",
+      "oyeran"
+    ],
+    "imp": [
+      "oye",
+      "oiga",
+      "oigamos",
+      "oíd",
+      "oigan"
+    ]
+  },
+  "olvidar": {
+    "en": "to forget",
+    "pres": [
+      "olvido",
+      "olvidas",
+      "olvida",
+      "olvidamos",
+      "olvidáis",
+      "olvidan"
+    ],
+    "pret": [
+      "olvidé",
+      "olvidaste",
+      "olvidó",
+      "olvidamos",
+      "olvidasteis",
+      "olvidaron"
+    ],
+    "imperf": [
+      "olvidaba",
+      "olvidabas",
+      "olvidaba",
+      "olvidábamos",
+      "olvidabais",
+      "olvidaban"
+    ],
+    "fut": [
+      "olvidaré",
+      "olvidarás",
+      "olvidará",
+      "olvidaremos",
+      "olvidaréis",
+      "olvidarán"
+    ],
+    "cond": [
+      "olvidaría",
+      "olvidarías",
+      "olvidaría",
+      "olvidaríamos",
+      "olvidaríais",
+      "olvidarían"
+    ],
+    "subjpres": [
+      "olvide",
+      "olvides",
+      "olvide",
+      "olvidemos",
+      "olvidéis",
+      "olviden"
+    ],
+    "subjimperf": [
+      "olvidara",
+      "olvidaras",
+      "olvidara",
+      "olvidáramos",
+      "olvidarais",
+      "olvidaran"
+    ],
+    "imp": [
+      "olvida",
+      "olvide",
+      "olvidemos",
+      "olvidad",
+      "olviden"
+    ]
+  },
+  "pagar": {
+    "en": "to pay",
+    "pres": [
+      "pago",
+      "pagas",
+      "paga",
+      "pagamos",
+      "pagáis",
+      "pagan"
+    ],
+    "pret": [
+      "pagué",
+      "pagaste",
+      "pagó",
+      "pagamos",
+      "pagasteis",
+      "pagaron"
+    ],
+    "imperf": [
+      "pagaba",
+      "pagabas",
+      "pagaba",
+      "pagábamos",
+      "pagabais",
+      "pagaban"
+    ],
+    "fut": [
+      "pagaré",
+      "pagarás",
+      "pagará",
+      "pagaremos",
+      "pagaréis",
+      "pagarán"
+    ],
+    "cond": [
+      "pagaría",
+      "pagarías",
+      "pagaría",
+      "pagaríamos",
+      "pagaríais",
+      "pagarían"
+    ],
+    "subjpres": [
+      "pague",
+      "pagues",
+      "pague",
+      "paguemos",
+      "paguéis",
+      "paguen"
+    ],
+    "subjimperf": [
+      "pagara",
+      "pagaras",
+      "pagara",
+      "pagáramos",
+      "pagarais",
+      "pagaran"
+    ],
+    "imp": [
+      "paga",
+      "pague",
+      "paguemos",
+      "pagad",
+      "paguen"
+    ]
+  },
+  "parecer": {
+    "en": "to seem / appear",
+    "pres": [
+      "parezco",
+      "pareces",
+      "parece",
+      "parecemos",
+      "parecéis",
+      "parecen"
+    ],
+    "pret": [
+      "parecí",
+      "pareciste",
+      "pareció",
+      "parecimos",
+      "parecisteis",
+      "parecieron"
+    ],
+    "imperf": [
+      "parecía",
+      "parecías",
+      "parecía",
+      "parecíamos",
+      "parecíais",
+      "parecían"
+    ],
+    "fut": [
+      "pareceré",
+      "parecerás",
+      "parecerá",
+      "pareceremos",
+      "pareceréis",
+      "parecerán"
+    ],
+    "cond": [
+      "parecería",
+      "parecerías",
+      "parecería",
+      "pareceríamos",
+      "pareceríais",
+      "parecerían"
+    ],
+    "subjpres": [
+      "parezca",
+      "parezcas",
+      "parezca",
+      "parezcamos",
+      "parezcáis",
+      "parezcan"
+    ],
+    "subjimperf": [
+      "pareciera",
+      "parecieras",
+      "pareciera",
+      "pareciéramos",
+      "parecierais",
+      "parecieran"
+    ],
+    "imp": [
+      "parece",
+      "parezca",
+      "parezcamos",
+      "pareced",
+      "parezcan"
+    ]
+  },
+  "pedir": {
+    "en": "to ask for / order / request",
+    "pres": [
+      "pido",
+      "pides",
+      "pide",
+      "pedimos",
+      "pedís",
+      "piden"
+    ],
+    "pret": [
+      "pedí",
+      "pediste",
+      "pidió",
+      "pedimos",
+      "pedisteis",
+      "pidieron"
+    ],
+    "imperf": [
+      "pedía",
+      "pedías",
+      "pedía",
+      "pedíamos",
+      "pedíais",
+      "pedían"
+    ],
+    "fut": [
+      "pediré",
+      "pedirás",
+      "pedirá",
+      "pediremos",
+      "pediréis",
+      "pedirán"
+    ],
+    "cond": [
+      "pediría",
+      "pedirías",
+      "pediría",
+      "pediríamos",
+      "pediríais",
+      "pedirían"
+    ],
+    "subjpres": [
+      "pida",
+      "pidas",
+      "pida",
+      "pidamos",
+      "pidáis",
+      "pidan"
+    ],
+    "subjimperf": [
+      "pidiera",
+      "pidieras",
+      "pidiera",
+      "pidiéramos",
+      "pidierais",
+      "pidieran"
+    ],
+    "imp": [
+      "pide",
+      "pida",
+      "pidamos",
+      "pedid",
+      "pidan"
+    ]
+  },
+  "pensar": {
+    "en": "to think / plan",
+    "pres": [
+      "pienso",
+      "piensas",
+      "piensa",
+      "pensamos",
+      "pensáis",
+      "piensan"
+    ],
+    "pret": [
+      "pensé",
+      "pensaste",
+      "pensó",
+      "pensamos",
+      "pensasteis",
+      "pensaron"
+    ],
+    "imperf": [
+      "pensaba",
+      "pensabas",
+      "pensaba",
+      "pensábamos",
+      "pensabais",
+      "pensaban"
+    ],
+    "fut": [
+      "pensaré",
+      "pensarás",
+      "pensará",
+      "pensaremos",
+      "pensaréis",
+      "pensarán"
+    ],
+    "cond": [
+      "pensaría",
+      "pensarías",
+      "pensaría",
+      "pensaríamos",
+      "pensaríais",
+      "pensarían"
+    ],
+    "subjpres": [
+      "piense",
+      "pienses",
+      "piense",
+      "pensemos",
+      "penséis",
+      "piensen"
+    ],
+    "subjimperf": [
+      "pensara",
+      "pensaras",
+      "pensara",
+      "pensáramos",
+      "pensarais",
+      "pensaran"
+    ],
+    "imp": [
+      "piensa",
+      "piense",
+      "pensemos",
+      "pensad",
+      "piensen"
+    ]
+  },
+  "perder": {
+    "en": "to lose / miss",
+    "pres": [
+      "pierdo",
+      "pierdes",
+      "pierde",
+      "perdemos",
+      "perdéis",
+      "pierden"
+    ],
+    "pret": [
+      "perdí",
+      "perdiste",
+      "perdió",
+      "perdimos",
+      "perdisteis",
+      "perdieron"
+    ],
+    "imperf": [
+      "perdía",
+      "perdías",
+      "perdía",
+      "perdíamos",
+      "perdíais",
+      "perdían"
+    ],
+    "fut": [
+      "perderé",
+      "perderás",
+      "perderá",
+      "perderemos",
+      "perderéis",
+      "perderán"
+    ],
+    "cond": [
+      "perdería",
+      "perderías",
+      "perdería",
+      "perderíamos",
+      "perderíais",
+      "perderían"
+    ],
+    "subjpres": [
+      "pierda",
+      "pierdas",
+      "pierda",
+      "perdamos",
+      "perdáis",
+      "pierdan"
+    ],
+    "subjimperf": [
+      "perdiera",
+      "perdieras",
+      "perdiera",
+      "perdiéramos",
+      "perdierais",
+      "perdieran"
+    ],
+    "imp": [
+      "pierde",
+      "pierda",
+      "perdamos",
+      "perded",
+      "pierdan"
+    ]
+  },
+  "poder": {
+    "en": "to be able to / can",
+    "pres": [
+      "puedo",
+      "puedes",
+      "puede",
+      "podemos",
+      "podéis",
+      "pueden"
+    ],
+    "pret": [
+      "pude",
+      "pudiste",
+      "pudo",
+      "pudimos",
+      "pudisteis",
+      "pudieron"
+    ],
+    "imperf": [
+      "podía",
+      "podías",
+      "podía",
+      "podíamos",
+      "podíais",
+      "podían"
+    ],
+    "fut": [
+      "podré",
+      "podrás",
+      "podrá",
+      "podremos",
+      "podréis",
+      "podrán"
+    ],
+    "cond": [
+      "podría",
+      "podrías",
+      "podría",
+      "podríamos",
+      "podríais",
+      "podrían"
+    ],
+    "subjpres": [
+      "pueda",
+      "puedas",
+      "pueda",
+      "podamos",
+      "podáis",
+      "puedan"
+    ],
+    "subjimperf": [
+      "pudiera",
+      "pudieras",
+      "pudiera",
+      "pudiéramos",
+      "pudierais",
+      "pudieran"
+    ],
+    "imp": [
+      "puede",
+      "pueda",
+      "podamos",
+      "poded",
+      "puedan"
+    ]
+  },
+  "poner": {
+    "en": "to put / place / set",
+    "pres": [
+      "pongo",
+      "pones",
+      "pone",
+      "ponemos",
+      "ponéis",
+      "ponen"
+    ],
+    "pret": [
+      "puse",
+      "pusiste",
+      "puso",
+      "pusimos",
+      "pusisteis",
+      "pusieron"
+    ],
+    "imperf": [
+      "ponía",
+      "ponías",
+      "ponía",
+      "poníamos",
+      "poníais",
+      "ponían"
+    ],
+    "fut": [
+      "pondré",
+      "pondrás",
+      "pondrá",
+      "pondremos",
+      "pondréis",
+      "pondrán"
+    ],
+    "cond": [
+      "pondría",
+      "pondrías",
+      "pondría",
+      "pondríamos",
+      "pondríais",
+      "pondrían"
+    ],
+    "subjpres": [
+      "ponga",
+      "pongas",
+      "ponga",
+      "pongamos",
+      "pongáis",
+      "pongan"
+    ],
+    "subjimperf": [
+      "pusiera",
+      "pusieras",
+      "pusiera",
+      "pusiéramos",
+      "pusierais",
+      "pusieran"
+    ],
+    "imp": [
+      "pon",
+      "ponga",
+      "pongamos",
+      "poned",
+      "pongan"
+    ]
+  },
+  "preferir": {
+    "en": "to prefer",
+    "pres": [
+      "prefiero",
+      "prefieres",
+      "prefiere",
+      "preferimos",
+      "preferís",
+      "prefieren"
+    ],
+    "pret": [
+      "preferí",
+      "preferiste",
+      "prefirió",
+      "preferimos",
+      "preferisteis",
+      "prefirieron"
+    ],
+    "imperf": [
+      "prefería",
+      "preferías",
+      "prefería",
+      "preferíamos",
+      "preferíais",
+      "preferían"
+    ],
+    "fut": [
+      "preferiré",
+      "preferirás",
+      "preferirá",
+      "preferiremos",
+      "preferiréis",
+      "preferirán"
+    ],
+    "cond": [
+      "preferiría",
+      "preferirías",
+      "preferiría",
+      "preferiríamos",
+      "preferiríais",
+      "preferirían"
+    ],
+    "subjpres": [
+      "prefiera",
+      "prefieras",
+      "prefiera",
+      "prefiramos",
+      "prefiráis",
+      "prefieran"
+    ],
+    "subjimperf": [
+      "prefiriera",
+      "prefirieras",
+      "prefiriera",
+      "prefiriéramos",
+      "prefirierais",
+      "prefirieran"
+    ],
+    "imp": [
+      "prefiere",
+      "prefiera",
+      "prefiramos",
+      "preferid",
+      "prefieran"
+    ]
+  },
+  "preguntar": {
+    "en": "to ask (a question)",
+    "pres": [
+      "pregunto",
+      "preguntas",
+      "pregunta",
+      "preguntamos",
+      "preguntáis",
+      "preguntan"
+    ],
+    "pret": [
+      "pregunté",
+      "preguntaste",
+      "preguntó",
+      "preguntamos",
+      "preguntasteis",
+      "preguntaron"
+    ],
+    "imperf": [
+      "preguntaba",
+      "preguntabas",
+      "preguntaba",
+      "preguntábamos",
+      "preguntabais",
+      "preguntaban"
+    ],
+    "fut": [
+      "preguntaré",
+      "preguntarás",
+      "preguntará",
+      "preguntaremos",
+      "preguntaréis",
+      "preguntarán"
+    ],
+    "cond": [
+      "preguntaría",
+      "preguntarías",
+      "preguntaría",
+      "preguntaríamos",
+      "preguntaríais",
+      "preguntarían"
+    ],
+    "subjpres": [
+      "pregunte",
+      "preguntes",
+      "pregunte",
+      "preguntemos",
+      "preguntéis",
+      "pregunten"
+    ],
+    "subjimperf": [
+      "preguntara",
+      "preguntaras",
+      "preguntara",
+      "preguntáramos",
+      "preguntarais",
+      "preguntaran"
+    ],
+    "imp": [
+      "pregunta",
+      "pregunte",
+      "preguntemos",
+      "preguntad",
+      "pregunten"
+    ]
+  },
+  "quedar": {
+    "en": "to stay / remain / meet up",
+    "pres": [
+      "quedo",
+      "quedas",
+      "queda",
+      "quedamos",
+      "quedáis",
+      "quedan"
+    ],
+    "pret": [
+      "quedé",
+      "quedaste",
+      "quedó",
+      "quedamos",
+      "quedasteis",
+      "quedaron"
+    ],
+    "imperf": [
+      "quedaba",
+      "quedabas",
+      "quedaba",
+      "quedábamos",
+      "quedabais",
+      "quedaban"
+    ],
+    "fut": [
+      "quedaré",
+      "quedarás",
+      "quedará",
+      "quedaremos",
+      "quedaréis",
+      "quedarán"
+    ],
+    "cond": [
+      "quedaría",
+      "quedarías",
+      "quedaría",
+      "quedaríamos",
+      "quedaríais",
+      "quedarían"
+    ],
+    "subjpres": [
+      "quede",
+      "quedes",
+      "quede",
+      "quedemos",
+      "quedéis",
+      "queden"
+    ],
+    "subjimperf": [
+      "quedara",
+      "quedaras",
+      "quedara",
+      "quedáramos",
+      "quedarais",
+      "quedaran"
+    ],
+    "imp": [
+      "queda",
+      "quede",
+      "quedemos",
+      "quedad",
+      "queden"
+    ]
+  },
+  "querer": {
+    "en": "to want / love",
+    "pres": [
+      "quiero",
+      "quieres",
+      "quiere",
+      "queremos",
+      "queréis",
+      "quieren"
+    ],
+    "pret": [
+      "quise",
+      "quisiste",
+      "quiso",
+      "quisimos",
+      "quisisteis",
+      "quisieron"
+    ],
+    "imperf": [
+      "quería",
+      "querías",
+      "quería",
+      "queríamos",
+      "queríais",
+      "querían"
+    ],
+    "fut": [
+      "querré",
+      "querrás",
+      "querrá",
+      "querremos",
+      "querréis",
+      "querrán"
+    ],
+    "cond": [
+      "querría",
+      "querrías",
+      "querría",
+      "querríamos",
+      "querríais",
+      "querrían"
+    ],
+    "subjpres": [
+      "quiera",
+      "quieras",
+      "quiera",
+      "queramos",
+      "queráis",
+      "quieran"
+    ],
+    "subjimperf": [
+      "quisiera",
+      "quisieras",
+      "quisiera",
+      "quisiéramos",
+      "quisierais",
+      "quisieran"
+    ],
+    "imp": [
+      "quiere",
+      "quiera",
+      "queramos",
+      "quered",
+      "quieran"
+    ]
+  },
+  "recibir": {
+    "en": "to receive",
+    "pres": [
+      "recibo",
+      "recibes",
+      "recibe",
+      "recibimos",
+      "recibís",
+      "reciben"
+    ],
+    "pret": [
+      "recibí",
+      "recibiste",
+      "recibió",
+      "recibimos",
+      "recibisteis",
+      "recibieron"
+    ],
+    "imperf": [
+      "recibía",
+      "recibías",
+      "recibía",
+      "recibíamos",
+      "recibíais",
+      "recibían"
+    ],
+    "fut": [
+      "recibiré",
+      "recibirás",
+      "recibirá",
+      "recibiremos",
+      "recibiréis",
+      "recibirán"
+    ],
+    "cond": [
+      "recibiría",
+      "recibirías",
+      "recibiría",
+      "recibiríamos",
+      "recibiríais",
+      "recibirían"
+    ],
+    "subjpres": [
+      "reciba",
+      "recibas",
+      "reciba",
+      "recibamos",
+      "recibáis",
+      "reciban"
+    ],
+    "subjimperf": [
+      "recibiera",
+      "recibieras",
+      "recibiera",
+      "recibiéramos",
+      "recibierais",
+      "recibieran"
+    ],
+    "imp": [
+      "recibe",
+      "reciba",
+      "recibamos",
+      "recibid",
+      "reciban"
+    ]
+  },
+  "recordar": {
+    "en": "to remember / remind",
+    "pres": [
+      "recuerdo",
+      "recuerdas",
+      "recuerda",
+      "recordamos",
+      "recordáis",
+      "recuerdan"
+    ],
+    "pret": [
+      "recordé",
+      "recordaste",
+      "recordó",
+      "recordamos",
+      "recordasteis",
+      "recordaron"
+    ],
+    "imperf": [
+      "recordaba",
+      "recordabas",
+      "recordaba",
+      "recordábamos",
+      "recordabais",
+      "recordaban"
+    ],
+    "fut": [
+      "recordaré",
+      "recordarás",
+      "recordará",
+      "recordaremos",
+      "recordaréis",
+      "recordarán"
+    ],
+    "cond": [
+      "recordaría",
+      "recordarías",
+      "recordaría",
+      "recordaríamos",
+      "recordaríais",
+      "recordarían"
+    ],
+    "subjpres": [
+      "recuerde",
+      "recuerdes",
+      "recuerde",
+      "recordemos",
+      "recordéis",
+      "recuerden"
+    ],
+    "subjimperf": [
+      "recordara",
+      "recordaras",
+      "recordara",
+      "recordáramos",
+      "recordarais",
+      "recordaran"
+    ],
+    "imp": [
+      "recuerda",
+      "recuerde",
+      "recordemos",
+      "recordad",
+      "recuerden"
+    ]
+  },
+  "reir": {
+    "en": "to laugh",
+    "pres": [
+      "río",
+      "ríes",
+      "ríe",
+      "reímos",
+      "reís",
+      "ríen"
+    ],
+    "pret": [
+      "reí",
+      "reíste",
+      "rió",
+      "reímos",
+      "reísteis",
+      "rieron"
+    ],
+    "imperf": [
+      "reía",
+      "reías",
+      "reía",
+      "reíamos",
+      "reíais",
+      "reían"
+    ],
+    "fut": [
+      "reiré",
+      "reirás",
+      "reirá",
+      "reiremos",
+      "reiréis",
+      "reirán"
+    ],
+    "cond": [
+      "reiría",
+      "reirías",
+      "reiría",
+      "reiríamos",
+      "reiríais",
+      "reirían"
+    ],
+    "subjpres": [
+      "ría",
+      "rías",
+      "ría",
+      "riamos",
+      "riáis",
+      "rían"
+    ],
+    "subjimperf": [
+      "riera",
+      "rieras",
+      "riera",
+      "riéramos",
+      "rierais",
+      "rieran"
+    ],
+    "imp": [
+      "ríe",
+      "ría",
+      "riamos",
+      "reíd",
+      "rían"
+    ]
+  },
+  "repetir": {
+    "en": "to repeat",
+    "pres": [
+      "repito",
+      "repites",
+      "repite",
+      "repetimos",
+      "repetís",
+      "repiten"
+    ],
+    "pret": [
+      "repetí",
+      "repetiste",
+      "repitió",
+      "repetimos",
+      "repetisteis",
+      "repitieron"
+    ],
+    "imperf": [
+      "repetía",
+      "repetías",
+      "repetía",
+      "repetíamos",
+      "repetíais",
+      "repetían"
+    ],
+    "fut": [
+      "repetiré",
+      "repetirás",
+      "repetirá",
+      "repetiremos",
+      "repetiréis",
+      "repetirán"
+    ],
+    "cond": [
+      "repetiría",
+      "repetirías",
+      "repetiría",
+      "repetiríamos",
+      "repetiríais",
+      "repetirían"
+    ],
+    "subjpres": [
+      "repita",
+      "repitas",
+      "repita",
+      "repitamos",
+      "repitáis",
+      "repitan"
+    ],
+    "subjimperf": [
+      "repitiera",
+      "repitieras",
+      "repitiera",
+      "repitiéramos",
+      "repitierais",
+      "repitieran"
+    ],
+    "imp": [
+      "repite",
+      "repita",
+      "repitamos",
+      "repetid",
+      "repitan"
+    ]
+  },
+  "saber": {
+    "en": "to know (facts/how to)",
+    "pres": [
+      "sé",
+      "sabes",
+      "sabe",
+      "sabemos",
+      "sabéis",
+      "saben"
+    ],
+    "pret": [
+      "supe",
+      "supiste",
+      "supo",
+      "supimos",
+      "supisteis",
+      "supieron"
+    ],
+    "imperf": [
+      "sabía",
+      "sabías",
+      "sabía",
+      "sabíamos",
+      "sabíais",
+      "sabían"
+    ],
+    "fut": [
+      "sabré",
+      "sabrás",
+      "sabrá",
+      "sabremos",
+      "sabréis",
+      "sabrán"
+    ],
+    "cond": [
+      "sabría",
+      "sabrías",
+      "sabría",
+      "sabríamos",
+      "sabríais",
+      "sabrían"
+    ],
+    "subjpres": [
+      "sepa",
+      "sepas",
+      "sepa",
+      "sepamos",
+      "sepáis",
+      "sepan"
+    ],
+    "subjimperf": [
+      "supiera",
+      "supieras",
+      "supiera",
+      "supiéramos",
+      "supierais",
+      "supieran"
+    ],
+    "imp": [
+      "sabe",
+      "sepa",
+      "sepamos",
+      "sabed",
+      "sepan"
+    ]
+  },
+  "salir": {
+    "en": "to leave / go out",
+    "pres": [
+      "salgo",
+      "sales",
+      "sale",
+      "salimos",
+      "salís",
+      "salen"
+    ],
+    "pret": [
+      "salí",
+      "saliste",
+      "salió",
+      "salimos",
+      "salisteis",
+      "salieron"
+    ],
+    "imperf": [
+      "salía",
+      "salías",
+      "salía",
+      "salíamos",
+      "salíais",
+      "salían"
+    ],
+    "fut": [
+      "saldré",
+      "saldrás",
+      "saldrá",
+      "saldremos",
+      "saldréis",
+      "saldrán"
+    ],
+    "cond": [
+      "saldría",
+      "saldrías",
+      "saldría",
+      "saldríamos",
+      "saldríais",
+      "saldrían"
+    ],
+    "subjpres": [
+      "salga",
+      "salgas",
+      "salga",
+      "salgamos",
+      "salgáis",
+      "salgan"
+    ],
+    "subjimperf": [
+      "saliera",
+      "salieras",
+      "saliera",
+      "saliéramos",
+      "salierais",
+      "salieran"
+    ],
+    "imp": [
+      "sal",
+      "salga",
+      "salgamos",
+      "salid",
+      "salgan"
+    ]
+  },
+  "seguir": {
+    "en": "to follow / continue",
+    "pres": [
+      "sigo",
+      "sigues",
+      "sigue",
+      "seguimos",
+      "seguís",
+      "siguen"
+    ],
+    "pret": [
+      "seguí",
+      "seguiste",
+      "siguió",
+      "seguimos",
+      "seguisteis",
+      "siguieron"
+    ],
+    "imperf": [
+      "seguía",
+      "seguías",
+      "seguía",
+      "seguíamos",
+      "seguíais",
+      "seguían"
+    ],
+    "fut": [
+      "seguiré",
+      "seguirás",
+      "seguirá",
+      "seguiremos",
+      "seguiréis",
+      "seguirán"
+    ],
+    "cond": [
+      "seguiría",
+      "seguirías",
+      "seguiría",
+      "seguiríamos",
+      "seguiríais",
+      "seguirían"
+    ],
+    "subjpres": [
+      "siga",
+      "sigas",
+      "siga",
+      "sigamos",
+      "sigáis",
+      "sigan"
+    ],
+    "subjimperf": [
+      "siguiera",
+      "siguieras",
+      "siguiera",
+      "siguiéramos",
+      "siguierais",
+      "siguieran"
+    ],
+    "imp": [
+      "sigue",
+      "siga",
+      "sigamos",
+      "seguid",
+      "sigan"
+    ]
+  },
+  "sentir": {
+    "en": "to feel / regret",
+    "pres": [
+      "siento",
+      "sientes",
+      "siente",
+      "sentimos",
+      "sentís",
+      "sienten"
+    ],
+    "pret": [
+      "sentí",
+      "sentiste",
+      "sintió",
+      "sentimos",
+      "sentisteis",
+      "sintieron"
+    ],
+    "imperf": [
+      "sentía",
+      "sentías",
+      "sentía",
+      "sentíamos",
+      "sentíais",
+      "sentían"
+    ],
+    "fut": [
+      "sentiré",
+      "sentirás",
+      "sentirá",
+      "sentiremos",
+      "sentiréis",
+      "sentirán"
+    ],
+    "cond": [
+      "sentiría",
+      "sentirías",
+      "sentiría",
+      "sentiríamos",
+      "sentiríais",
+      "sentirían"
+    ],
+    "subjpres": [
+      "sienta",
+      "sientas",
+      "sienta",
+      "sintamos",
+      "sintáis",
+      "sientan"
+    ],
+    "subjimperf": [
+      "sintiera",
+      "sintieras",
+      "sintiera",
+      "sintiéramos",
+      "sintierais",
+      "sintieran"
+    ],
+    "imp": [
+      "siente",
+      "sienta",
+      "sintamos",
+      "sentid",
+      "sientan"
+    ]
+  },
+  "ser": {
+    "en": "to be (identity/permanent)",
+    "pres": [
+      "soy",
+      "eres",
+      "es",
+      "somos",
+      "sois",
+      "son"
+    ],
+    "pret": [
+      "fui",
+      "fuiste",
+      "fue",
+      "fuimos",
+      "fuisteis",
+      "fueron"
+    ],
+    "imperf": [
+      "era",
+      "eras",
+      "era",
+      "éramos",
+      "erais",
+      "eran"
+    ],
+    "fut": [
+      "seré",
+      "serás",
+      "será",
+      "seremos",
+      "seréis",
+      "serán"
+    ],
+    "cond": [
+      "sería",
+      "serías",
+      "sería",
+      "seríamos",
+      "seríais",
+      "serían"
+    ],
+    "subjpres": [
+      "sea",
+      "seas",
+      "sea",
+      "seamos",
+      "seáis",
+      "sean"
+    ],
+    "subjimperf": [
+      "fuera",
+      "fueras",
+      "fuera",
+      "fuéramos",
+      "fuerais",
+      "fueran"
+    ],
+    "imp": [
+      "sé",
+      "sea",
+      "seamos",
+      "sed",
+      "sean"
+    ]
+  },
+  "subir": {
+    "en": "to go up / climb / upload",
+    "pres": [
+      "subo",
+      "subes",
+      "sube",
+      "subimos",
+      "subís",
+      "suben"
+    ],
+    "pret": [
+      "subí",
+      "subiste",
+      "subió",
+      "subimos",
+      "subisteis",
+      "subieron"
+    ],
+    "imperf": [
+      "subía",
+      "subías",
+      "subía",
+      "subíamos",
+      "subíais",
+      "subían"
+    ],
+    "fut": [
+      "subiré",
+      "subirás",
+      "subirá",
+      "subiremos",
+      "subiréis",
+      "subirán"
+    ],
+    "cond": [
+      "subiría",
+      "subirías",
+      "subiría",
+      "subiríamos",
+      "subiríais",
+      "subirían"
+    ],
+    "subjpres": [
+      "suba",
+      "subas",
+      "suba",
+      "subamos",
+      "subáis",
+      "suban"
+    ],
+    "subjimperf": [
+      "subiera",
+      "subieras",
+      "subiera",
+      "subiéramos",
+      "subierais",
+      "subieran"
+    ],
+    "imp": [
+      "sube",
+      "suba",
+      "subamos",
+      "subid",
+      "suban"
+    ]
+  },
+  "tener": {
+    "en": "to have",
+    "pres": [
+      "tengo",
+      "tienes",
+      "tiene",
+      "tenemos",
+      "tenéis",
+      "tienen"
+    ],
+    "pret": [
+      "tuve",
+      "tuviste",
+      "tuvo",
+      "tuvimos",
+      "tuvisteis",
+      "tuvieron"
+    ],
+    "imperf": [
+      "tenía",
+      "tenías",
+      "tenía",
+      "teníamos",
+      "teníais",
+      "tenían"
+    ],
+    "fut": [
+      "tendré",
+      "tendrás",
+      "tendrá",
+      "tendremos",
+      "tendréis",
+      "tendrán"
+    ],
+    "cond": [
+      "tendría",
+      "tendrías",
+      "tendría",
+      "tendríamos",
+      "tendríais",
+      "tendrían"
+    ],
+    "subjpres": [
+      "tenga",
+      "tengas",
+      "tenga",
+      "tengamos",
+      "tengáis",
+      "tengan"
+    ],
+    "subjimperf": [
+      "tuviera",
+      "tuvieras",
+      "tuviera",
+      "tuviéramos",
+      "tuvierais",
+      "tuvieran"
+    ],
+    "imp": [
+      "ten",
+      "tenga",
+      "tengamos",
+      "tened",
+      "tengan"
+    ]
+  },
+  "terminar": {
+    "en": "to finish / end",
+    "pres": [
+      "termino",
+      "terminas",
+      "termina",
+      "terminamos",
+      "termináis",
+      "terminan"
+    ],
+    "pret": [
+      "terminé",
+      "terminaste",
+      "terminó",
+      "terminamos",
+      "terminasteis",
+      "terminaron"
+    ],
+    "imperf": [
+      "terminaba",
+      "terminabas",
+      "terminaba",
+      "terminábamos",
+      "terminabais",
+      "terminaban"
+    ],
+    "fut": [
+      "terminaré",
+      "terminarás",
+      "terminará",
+      "terminaremos",
+      "terminaréis",
+      "terminarán"
+    ],
+    "cond": [
+      "terminaría",
+      "terminarías",
+      "terminaría",
+      "terminaríamos",
+      "terminaríais",
+      "terminarían"
+    ],
+    "subjpres": [
+      "termine",
+      "termines",
+      "termine",
+      "terminemos",
+      "terminéis",
+      "terminen"
+    ],
+    "subjimperf": [
+      "terminara",
+      "terminaras",
+      "terminara",
+      "termináramos",
+      "terminarais",
+      "terminaran"
+    ],
+    "imp": [
+      "termina",
+      "termine",
+      "terminemos",
+      "terminad",
+      "terminen"
+    ]
+  },
+  "tocar": {
+    "en": "to touch / play (instrument)",
+    "pres": [
+      "toco",
+      "tocas",
+      "toca",
+      "tocamos",
+      "tocáis",
+      "tocan"
+    ],
+    "pret": [
+      "toqué",
+      "tocaste",
+      "tocó",
+      "tocamos",
+      "tocasteis",
+      "tocaron"
+    ],
+    "imperf": [
+      "tocaba",
+      "tocabas",
+      "tocaba",
+      "tocábamos",
+      "tocabais",
+      "tocaban"
+    ],
+    "fut": [
+      "tocaré",
+      "tocarás",
+      "tocará",
+      "tocaremos",
+      "tocaréis",
+      "tocarán"
+    ],
+    "cond": [
+      "tocaría",
+      "tocarías",
+      "tocaría",
+      "tocaríamos",
+      "tocaríais",
+      "tocarían"
+    ],
+    "subjpres": [
+      "toque",
+      "toques",
+      "toque",
+      "toquemos",
+      "toquéis",
+      "toquen"
+    ],
+    "subjimperf": [
+      "tocara",
+      "tocaras",
+      "tocara",
+      "tocáramos",
+      "tocarais",
+      "tocaran"
+    ],
+    "imp": [
+      "toca",
+      "toque",
+      "toquemos",
+      "tocad",
+      "toquen"
+    ]
+  },
+  "tomar": {
+    "en": "to take / drink / have",
+    "pres": [
+      "tomo",
+      "tomas",
+      "toma",
+      "tomamos",
+      "tomáis",
+      "toman"
+    ],
+    "pret": [
+      "tomé",
+      "tomaste",
+      "tomó",
+      "tomamos",
+      "tomasteis",
+      "tomaron"
+    ],
+    "imperf": [
+      "tomaba",
+      "tomabas",
+      "tomaba",
+      "tomábamos",
+      "tomabais",
+      "tomaban"
+    ],
+    "fut": [
+      "tomaré",
+      "tomarás",
+      "tomará",
+      "tomaremos",
+      "tomaréis",
+      "tomarán"
+    ],
+    "cond": [
+      "tomaría",
+      "tomarías",
+      "tomaría",
+      "tomaríamos",
+      "tomaríais",
+      "tomarían"
+    ],
+    "subjpres": [
+      "tome",
+      "tomes",
+      "tome",
+      "tomemos",
+      "toméis",
+      "tomen"
+    ],
+    "subjimperf": [
+      "tomara",
+      "tomaras",
+      "tomara",
+      "tomáramos",
+      "tomarais",
+      "tomaran"
+    ],
+    "imp": [
+      "toma",
+      "tome",
+      "tomemos",
+      "tomad",
+      "tomen"
+    ]
+  },
+  "trabajar": {
+    "en": "to work",
+    "pres": [
+      "trabajo",
+      "trabajas",
+      "trabaja",
+      "trabajamos",
+      "trabajáis",
+      "trabajan"
+    ],
+    "pret": [
+      "trabajé",
+      "trabajaste",
+      "trabajó",
+      "trabajamos",
+      "trabajasteis",
+      "trabajaron"
+    ],
+    "imperf": [
+      "trabajaba",
+      "trabajabas",
+      "trabajaba",
+      "trabajábamos",
+      "trabajabais",
+      "trabajaban"
+    ],
+    "fut": [
+      "trabajaré",
+      "trabajarás",
+      "trabajará",
+      "trabajaremos",
+      "trabajaréis",
+      "trabajarán"
+    ],
+    "cond": [
+      "trabajaría",
+      "trabajarías",
+      "trabajaría",
+      "trabajaríamos",
+      "trabajaríais",
+      "trabajarían"
+    ],
+    "subjpres": [
+      "trabaje",
+      "trabajes",
+      "trabaje",
+      "trabajemos",
+      "trabajéis",
+      "trabajen"
+    ],
+    "subjimperf": [
+      "trabajara",
+      "trabajaras",
+      "trabajara",
+      "trabajáramos",
+      "trabajarais",
+      "trabajaran"
+    ],
+    "imp": [
+      "trabaja",
+      "trabaje",
+      "trabajemos",
+      "trabajad",
+      "trabajen"
+    ]
+  },
+  "traer": {
+    "en": "to bring",
+    "pres": [
+      "traigo",
+      "traes",
+      "trae",
+      "traemos",
+      "traéis",
+      "traen"
+    ],
+    "pret": [
+      "traje",
+      "trajiste",
+      "trajo",
+      "trajimos",
+      "trajisteis",
+      "trajeron"
+    ],
+    "imperf": [
+      "traía",
+      "traías",
+      "traía",
+      "traíamos",
+      "traíais",
+      "traían"
+    ],
+    "fut": [
+      "traeré",
+      "traerás",
+      "traerá",
+      "traeremos",
+      "traeréis",
+      "traerán"
+    ],
+    "cond": [
+      "traería",
+      "traerías",
+      "traería",
+      "traeríamos",
+      "traeríais",
+      "traerían"
+    ],
+    "subjpres": [
+      "traiga",
+      "traigas",
+      "traiga",
+      "traigamos",
+      "traigáis",
+      "traigan"
+    ],
+    "subjimperf": [
+      "trajera",
+      "trajeras",
+      "trajera",
+      "trajéramos",
+      "trajerais",
+      "trajeran"
+    ],
+    "imp": [
+      "trae",
+      "traiga",
+      "traigamos",
+      "traed",
+      "traigan"
+    ]
+  },
+  "usar": {
+    "en": "to use",
+    "pres": [
+      "uso",
+      "usas",
+      "usa",
+      "usamos",
+      "usáis",
+      "usan"
+    ],
+    "pret": [
+      "usé",
+      "usaste",
+      "usó",
+      "usamos",
+      "usasteis",
+      "usaron"
+    ],
+    "imperf": [
+      "usaba",
+      "usabas",
+      "usaba",
+      "usábamos",
+      "usabais",
+      "usaban"
+    ],
+    "fut": [
+      "usaré",
+      "usarás",
+      "usará",
+      "usaremos",
+      "usaréis",
+      "usarán"
+    ],
+    "cond": [
+      "usaría",
+      "usarías",
+      "usaría",
+      "usaríamos",
+      "usaríais",
+      "usarían"
+    ],
+    "subjpres": [
+      "use",
+      "uses",
+      "use",
+      "usemos",
+      "uséis",
+      "usen"
+    ],
+    "subjimperf": [
+      "usara",
+      "usaras",
+      "usara",
+      "usáramos",
+      "usarais",
+      "usaran"
+    ],
+    "imp": [
+      "usa",
+      "use",
+      "usemos",
+      "usad",
+      "usen"
+    ]
+  },
+  "vender": {
+    "en": "to sell",
+    "pres": [
+      "vendo",
+      "vendes",
+      "vende",
+      "vendemos",
+      "vendéis",
+      "venden"
+    ],
+    "pret": [
+      "vendí",
+      "vendiste",
+      "vendió",
+      "vendimos",
+      "vendisteis",
+      "vendieron"
+    ],
+    "imperf": [
+      "vendía",
+      "vendías",
+      "vendía",
+      "vendíamos",
+      "vendíais",
+      "vendían"
+    ],
+    "fut": [
+      "venderé",
+      "venderás",
+      "venderá",
+      "venderemos",
+      "venderéis",
+      "venderán"
+    ],
+    "cond": [
+      "vendería",
+      "venderías",
+      "vendería",
+      "venderíamos",
+      "venderíais",
+      "venderían"
+    ],
+    "subjpres": [
+      "venda",
+      "vendas",
+      "venda",
+      "vendamos",
+      "vendáis",
+      "vendan"
+    ],
+    "subjimperf": [
+      "vendiera",
+      "vendieras",
+      "vendiera",
+      "vendiéramos",
+      "vendierais",
+      "vendieran"
+    ],
+    "imp": [
+      "vende",
+      "venda",
+      "vendamos",
+      "vended",
+      "vendan"
+    ]
+  },
+  "venir": {
+    "en": "to come",
+    "pres": [
+      "vengo",
+      "vienes",
+      "viene",
+      "venimos",
+      "venís",
+      "vienen"
+    ],
+    "pret": [
+      "vine",
+      "viniste",
+      "vino",
+      "vinimos",
+      "vinisteis",
+      "vinieron"
+    ],
+    "imperf": [
+      "venía",
+      "venías",
+      "venía",
+      "veníamos",
+      "veníais",
+      "venían"
+    ],
+    "fut": [
+      "vendré",
+      "vendrás",
+      "vendrá",
+      "vendremos",
+      "vendréis",
+      "vendrán"
+    ],
+    "cond": [
+      "vendría",
+      "vendrías",
+      "vendría",
+      "vendríamos",
+      "vendríais",
+      "vendrían"
+    ],
+    "subjpres": [
+      "venga",
+      "vengas",
+      "venga",
+      "vengamos",
+      "vengáis",
+      "vengan"
+    ],
+    "subjimperf": [
+      "viniera",
+      "vinieras",
+      "viniera",
+      "viniéramos",
+      "vinierais",
+      "vinieran"
+    ],
+    "imp": [
+      "ven",
+      "venga",
+      "vengamos",
+      "venid",
+      "vengan"
+    ]
+  },
+  "ver": {
+    "en": "to see / watch",
+    "pres": [
+      "veo",
+      "ves",
+      "ve",
+      "vemos",
+      "veis",
+      "ven"
+    ],
+    "pret": [
+      "vi",
+      "viste",
+      "vio",
+      "vimos",
+      "visteis",
+      "vieron"
+    ],
+    "imperf": [
+      "veía",
+      "veías",
+      "veía",
+      "veíamos",
+      "veíais",
+      "veían"
+    ],
+    "fut": [
+      "veré",
+      "verás",
+      "verá",
+      "veremos",
+      "veréis",
+      "verán"
+    ],
+    "cond": [
+      "vería",
+      "verías",
+      "vería",
+      "veríamos",
+      "veríais",
+      "verían"
+    ],
+    "subjpres": [
+      "vea",
+      "veas",
+      "vea",
+      "veamos",
+      "veáis",
+      "vean"
+    ],
+    "subjimperf": [
+      "viera",
+      "vieras",
+      "viera",
+      "viéramos",
+      "vierais",
+      "vieran"
+    ],
+    "imp": [
+      "ve",
+      "vea",
+      "veamos",
+      "ved",
+      "vean"
+    ]
+  },
+  "viajar": {
+    "en": "to travel",
+    "pres": [
+      "viajo",
+      "viajas",
+      "viaja",
+      "viajamos",
+      "viajáis",
+      "viajan"
+    ],
+    "pret": [
+      "viajé",
+      "viajaste",
+      "viajó",
+      "viajamos",
+      "viajasteis",
+      "viajaron"
+    ],
+    "imperf": [
+      "viajaba",
+      "viajabas",
+      "viajaba",
+      "viajábamos",
+      "viajabais",
+      "viajaban"
+    ],
+    "fut": [
+      "viajaré",
+      "viajarás",
+      "viajará",
+      "viajaremos",
+      "viajaréis",
+      "viajarán"
+    ],
+    "cond": [
+      "viajaría",
+      "viajarías",
+      "viajaría",
+      "viajaríamos",
+      "viajaríais",
+      "viajarían"
+    ],
+    "subjpres": [
+      "viaje",
+      "viajes",
+      "viaje",
+      "viajemos",
+      "viajéis",
+      "viajen"
+    ],
+    "subjimperf": [
+      "viajara",
+      "viajaras",
+      "viajara",
+      "viajáramos",
+      "viajarais",
+      "viajaran"
+    ],
+    "imp": [
+      "viaja",
+      "viaje",
+      "viajemos",
+      "viajad",
+      "viajen"
+    ]
+  },
+  "vivir": {
+    "en": "to live",
+    "pres": [
+      "vivo",
+      "vives",
+      "vive",
+      "vivimos",
+      "vivís",
+      "viven"
+    ],
+    "pret": [
+      "viví",
+      "viviste",
+      "vivió",
+      "vivimos",
+      "vivisteis",
+      "vivieron"
+    ],
+    "imperf": [
+      "vivía",
+      "vivías",
+      "vivía",
+      "vivíamos",
+      "vivíais",
+      "vivían"
+    ],
+    "fut": [
+      "viviré",
+      "vivirás",
+      "vivirá",
+      "viviremos",
+      "viviréis",
+      "vivirán"
+    ],
+    "cond": [
+      "viviría",
+      "vivirías",
+      "viviría",
+      "viviríamos",
+      "viviríais",
+      "vivirían"
+    ],
+    "subjpres": [
+      "viva",
+      "vivas",
+      "viva",
+      "vivamos",
+      "viváis",
+      "vivan"
+    ],
+    "subjimperf": [
+      "viviera",
+      "vivieras",
+      "viviera",
+      "viviéramos",
+      "vivierais",
+      "vivieran"
+    ],
+    "imp": [
+      "vive",
+      "viva",
+      "vivamos",
+      "vivid",
+      "vivan"
+    ]
+  },
+  "volver": {
+    "en": "to return / come back",
+    "pres": [
+      "vuelvo",
+      "vuelves",
+      "vuelve",
+      "volvemos",
+      "volvéis",
+      "vuelven"
+    ],
+    "pret": [
+      "volví",
+      "volviste",
+      "volvió",
+      "volvimos",
+      "volvisteis",
+      "volvieron"
+    ],
+    "imperf": [
+      "volvía",
+      "volvías",
+      "volvía",
+      "volvíamos",
+      "volvíais",
+      "volvían"
+    ],
+    "fut": [
+      "volveré",
+      "volverás",
+      "volverá",
+      "volveremos",
+      "volveréis",
+      "volverán"
+    ],
+    "cond": [
+      "volvería",
+      "volverías",
+      "volvería",
+      "volveríamos",
+      "volveríais",
+      "volverían"
+    ],
+    "subjpres": [
+      "vuelva",
+      "vuelvas",
+      "vuelva",
+      "volvamos",
+      "volváis",
+      "vuelvan"
+    ],
+    "subjimperf": [
+      "volviera",
+      "volvieras",
+      "volviera",
+      "volviéramos",
+      "volvierais",
+      "volvieran"
+    ],
+    "imp": [
+      "vuelve",
+      "vuelva",
+      "volvamos",
+      "volved",
+      "vuelvan"
+    ]
+  }
+};
+
+const TENSES = [
+  { key:"pres",   label:"Present",              pronLabels:["yo","tú","él/ella","nosotros","vosotros","ellos/ellas"] },
+  { key:"pret",   label:"Preterite",             pronLabels:["yo","tú","él/ella","nosotros","vosotros","ellos/ellas"] },
+  { key:"imperf", label:"Imperfect",             pronLabels:["yo","tú","él/ella","nosotros","vosotros","ellos/ellas"] },
+  { key:"fut",    label:"Future",                pronLabels:["yo","tú","él/ella","nosotros","vosotros","ellos/ellas"] },
+  { key:"cond",   label:"Conditional",           pronLabels:["yo","tú","él/ella","nosotros","vosotros","ellos/ellas"] },
+  { key:"subjpres",   label:"Present subjunctive",    pronLabels:["yo","tú","él/ella","nosotros","vosotros","ellos/ellas"] },
+  { key:"subjimperf", label:"Imperfect subjunctive",  pronLabels:["yo","tú","él/ella","nosotros","vosotros","ellos/ellas"] },
+  { key:"imp",    label:"Imperative",            pronLabels:["tú","él/ella","nosotros","vosotros","ellos/ellas"] },
+];
+
+const DEFAULT_TENSES = ["pres","pret","imperf","fut","cond","subjpres","subjimperf","imp"];
+
+let state = {
+  screen: "settings",
+  verbs: Object.entries(VERB_DB).map(([inf, d]) => ({ inf, en: d.en })),
+  activeTenses: [...DEFAULT_TENSES],
+  // exercise state
+  verbIdx: 0,
+  tenseIdx: 0,
+  pronIdx: 0,
+  answered: false,
+  lastCorrect: false,
+  sessionCorrect: 0,
+  sessionTotal: 0,
+};
+
+const app = document.getElementById("app");
+
+function render() {
+  if (state.screen === "settings") renderSettings();
+  else if (state.screen === "exercise") renderExercise();
+  else renderDone();
+}
+
+// ── SETTINGS ──────────────────────────────────────────────
+function renderSettings() {
+  const tenseHtml = TENSES.map(t => {
+    const on = state.activeTenses.includes(t.key);
+    return `<div class="tense-chip ${on?'on':''}" onclick="toggleTense('${t.key}')">${t.label}</div>`;
+  }).join("");
+
+  const verbRows = state.verbs.map((v,i) => `
+    <div class="verb-row">
+      <input value="${esc(v.inf)}" onblur="updateVerb(${i},'inf',this.value)" spellcheck="false">
+      <input value="${esc(v.en)}" onblur="updateVerb(${i},'en',this.value)" spellcheck="false">
+      <button class="verb-del" onclick="removeVerb(${i})" title="Remove">×</button>
+    </div>`).join("");
+
+  app.innerHTML = `
+    <div class="header">
+      <h1><span>Spanish</span> conjugation gym</h1>
+      <p>${state.verbs.length} verbs · full conjugation database · no internet required</p>
+    </div>
+
+    <div class="card">
+      <div class="section-label">Tenses to practice</div>
+      <div class="tense-grid">${tenseHtml}</div>
+    </div>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.75rem">
+        <div class="section-label" style="margin:0">Verb list (${state.verbs.length})</div>
+        <div style="display:flex;gap:0.5rem;align-items:center">
+          <button class="add-verb-btn" onclick="resetVerbs()">Reset to defaults</button>
+          <button class="add-verb-btn" onclick="addVerb()">+ Add verb</button>
+        </div>
+      </div>
+      <div class="verb-list-wrap">
+        <div class="verb-editor">${verbRows}</div>
+      </div>
+      <p style="font-family:system-ui,sans-serif;font-size:0.75rem;color:var(--text-faint);margin-top:0.6rem">
+        Click to edit. Verbs run in order — all pronouns per tense before the next verb.
+      </p>
+    </div>
+
+    <button class="start-btn" onclick="startSession()"
+      ${state.activeTenses.length===0||state.verbs.length===0?'disabled':''}>
+      Start session →
+    </button>
+  `;
+}
+
+// ── EXERCISE ──────────────────────────────────────────────
+function getActiveVerbs() {
+  return state.verbs.filter(v => VERB_DB[v.inf]);
+}
+
+function getCurrentTense() {
+  return TENSES.find(t => t.key === state.activeTenses[state.tenseIdx]);
+}
+
+function getCurrentForms() {
+  const verbs = getActiveVerbs();
+  const v = verbs[state.verbIdx];
+  if (!v) return null;
+  const tenseKey = state.activeTenses[state.tenseIdx];
+  return VERB_DB[v.inf]?.[tenseKey] || null;
+}
+
+function renderExercise() {
+  const verbs = getActiveVerbs();
+  const v = verbs[state.verbIdx];
+  if (!v) { state.screen = "done"; render(); return; }
+  const tense = getCurrentTense();
+  const forms = getCurrentForms();
+  const pronouns = tense ? tense.pronLabels : [];
+  const pronoun = pronouns[state.pronIdx] || "—";
+  const numPronouns = pronouns.length;
+  const correctForm = forms ? (forms[state.pronIdx] || null) : null;
+
+  const dots = pronouns.map((_,i) =>
+    `<div class="dot ${i<state.pronIdx?'done':i===state.pronIdx?'current':''}"></div>`
+  ).join("");
+
+  const acc = state.sessionTotal > 0
+    ? Math.round(state.sessionCorrect/state.sessionTotal*100)+"%" : "—";
+
+  let feedbackHtml = "";
+  if (state.answered) {
+    if (state.lastCorrect) {
+      feedbackHtml = `<div class="feedback correct">Correct! ✓</div>`;
+    } else {
+      feedbackHtml = `<div class="feedback wrong">Incorrect — <span class="correct-form">${esc(correctForm||"(not in database)")}</span></div>`;
+    }
+  } else {
+    feedbackHtml = `<div class="feedback"></div>`;
+  }
+
+  const nextLabel = () => {
+    if (!state.answered) return "Check";
+    if (state.pronIdx < numPronouns - 1) return "Next pronoun →";
+    if (state.tenseIdx < state.activeTenses.length - 1) return "Next tense →";
+    if (state.verbIdx < verbs.length - 1) return "Next verb →";
+    return "Finish";
+  };
+
+  app.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.25rem">
+      <div class="progress-row" style="margin:0;flex:1">
+        <span class="badge">Verb ${state.verbIdx+1} / ${verbs.length}</span>
+        <span class="badge">Tense ${state.tenseIdx+1} / ${state.activeTenses.length}</span>
+        <span class="badge badge-tense">${tense?tense.label:''}</span>
+      </div>
+      <button class="settings-link" onclick="goSettings()">Settings</button>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num">${state.sessionCorrect}</div><div class="stat-lbl">correct</div></div>
+      <div class="stat-box"><div class="stat-num">${state.sessionTotal}</div><div class="stat-lbl">answered</div></div>
+      <div class="stat-box"><div class="stat-num">${acc}</div><div class="stat-lbl">accuracy</div></div>
+    </div>
+
+    <div class="card" style="margin-bottom:1rem">
+      <div class="verb-display">
+        <div class="verb-inf">${esc(v.inf)}</div>
+        <div class="verb-en">${esc(v.en)}</div>
+      </div>
+      <div class="tense-name">${tense?tense.label:''}</div>
+      <div class="dots-row">
+        ${dots}
+        <span class="dots-label">${state.pronIdx+1} / ${numPronouns}</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="pronoun-label">
+        ${esc(pronoun)}
+        <span id="eng-hint"></span>
+      </div>
+      <input
+        class="answer-input ${state.answered ? (state.lastCorrect?'correct':'wrong') : ''}"
+        id="ans"
+        type="text"
+        placeholder="conjugate…"
+        autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
+        ${state.answered ? 'disabled' : ''}
+        onkeydown="if(event.key==='Enter'){event.preventDefault();handleEnter()}"
+      >
+      ${feedbackHtml}
+      <div class="btn-row">
+        ${!state.answered ? `<button class="btn" onclick="skipIt()">Skip</button>` : ''}
+        <button class="btn btn-primary" id="main-btn" onclick="${state.answered?'nextStep()':'checkAnswer()'}">${nextLabel()}</button>
+      </div>
+    </div>
+  `;
+
+  const inp = document.getElementById("ans");
+  if (inp && !state.answered) inp.focus();
+}
+
+// ── DONE ──────────────────────────────────────────────────
+function renderDone() {
+  const pct = state.sessionTotal > 0
+    ? Math.round(state.sessionCorrect/state.sessionTotal*100) : 0;
+  app.innerHTML = `
+    <div class="header"><h1><span>Spanish</span> conjugation gym</h1></div>
+    <div class="card done-card">
+      <h2>Session complete</h2>
+      <p>You practiced ${getActiveVerbs().length} verb${getActiveVerbs().length!==1?'s':''} across ${state.activeTenses.length} tense${state.activeTenses.length!==1?'s':''}</p>
+      <div class="done-stats">
+        <div class="done-stat"><div class="n">${state.sessionCorrect}</div><div class="l">correct</div></div>
+        <div class="done-stat"><div class="n">${state.sessionTotal}</div><div class="l">total</div></div>
+        <div class="done-stat"><div class="n">${pct}%</div><div class="l">accuracy</div></div>
+      </div>
+      <div class="done-btns">
+        <button class="btn btn-primary" onclick="startSession()">Practice again</button>
+        <button class="btn" onclick="goSettings()">Change settings</button>
+      </div>
+    </div>
+  `;
+}
+
+// ── ACTIONS ───────────────────────────────────────────────
+function toggleTense(key) {
+  const i = state.activeTenses.indexOf(key);
+  if (i >= 0) state.activeTenses.splice(i, 1);
+  else state.activeTenses.push(key);
+  render();
+}
+
+function updateVerb(i, field, val) {
+  state.verbs[i][field] = val.trim();
+}
+
+function removeVerb(i) {
+  state.verbs.splice(i, 1);
+  render();
+}
+
+function addVerb() {
+  state.verbs.push({ inf: "", en: "" });
+  render();
+  setTimeout(() => {
+    const inputs = document.querySelectorAll(".verb-row input");
+    if (inputs.length) inputs[inputs.length - 2].focus();
+  }, 30);
+}
+
+function resetVerbs() {
+  if (!confirm("Reset verb list to defaults?")) return;
+  state.verbs = Object.entries(VERB_DB).map(([inf, d]) => ({ inf, en: d.en }));
+  render();
+}
+
+function startSession() {
+  state.verbIdx = 0;
+  state.tenseIdx = 0;
+  state.pronIdx = 0;
+  state.answered = false;
+  state.sessionCorrect = 0;
+  state.sessionTotal = 0;
+  state.screen = "exercise";
+  render();
+}
+
+function goSettings() {
+  state.screen = "settings";
+  render();
+}
+
+function handleEnter() {
+  if (state.answered) nextStep();
+  else checkAnswer();
+}
+
+function normalize(s) {
+  return (s||"").toLowerCase().trim()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, " ");
+}
+
+function checkAnswer() {
+  if (state.answered) return;
+  const inp = document.getElementById("ans");
+  if (!inp || !inp.value.trim()) return;
+  const val = inp.value.trim();
+  const forms = getCurrentForms();
+  const correct = forms ? (forms[state.pronIdx] || "") : "";
+  const alts = correct.split("/").map(s => s.trim()).filter(Boolean);
+  const isCorrect = alts.some(a => normalize(val) === normalize(a));
+  state.sessionTotal++;
+  if (isCorrect) state.sessionCorrect++;
+  state.answered = true;
+  state.lastCorrect = isCorrect;
+  render();
+}
+
+function skipIt() {
+  state.sessionTotal++;
+  state.lastCorrect = false;
+  state.answered = true;
+  render();
+}
+
+function nextStep() {
+  const verbs = getActiveVerbs();
+  const tense = getCurrentTense();
+  const numPronouns = tense ? tense.pronLabels.length : 6;
+  state.pronIdx++;
+  state.answered = false;
+
+  if (state.pronIdx >= numPronouns) {
+    state.pronIdx = 0;
+    state.tenseIdx++;
+    if (state.tenseIdx >= state.activeTenses.length) {
+      state.tenseIdx = 0;
+      state.verbIdx++;
+      if (state.verbIdx >= verbs.length) {
+        state.screen = "done";
+        render();
+        return;
+      }
+    }
+  }
+  render();
+}
+
+function esc(s) {
+  return (s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+
+render();
+</script>
+</body>
+</html>

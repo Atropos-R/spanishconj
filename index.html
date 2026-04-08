@@ -7061,6 +7061,7 @@ let state = {
   pronIdx: 0,
   answered: false,
   lastCorrect: false,
+  wrongAttempt: false,
   sessionCorrect: 0,
   sessionTotal: 0,
 };
@@ -7157,12 +7158,10 @@ function renderExercise() {
     ? Math.round(state.sessionCorrect/state.sessionTotal*100)+"%" : "—";
 
   let feedbackHtml = "";
-  if (state.answered) {
-    if (state.lastCorrect) {
-      feedbackHtml = `<div class="feedback correct">Correct! ✓</div>`;
-    } else {
-      feedbackHtml = `<div class="feedback wrong">Incorrect — <span class="correct-form">${esc(correctForm||"(not in database)")}</span></div>`;
-    }
+  if (state.answered && state.lastCorrect) {
+    feedbackHtml = `<div class="feedback correct">Correct! ✓</div>`;
+  } else if (state.wrongAttempt) {
+    feedbackHtml = `<div class="feedback wrong">Incorrect — try again</div>`;
   } else {
     feedbackHtml = `<div class="feedback"></div>`;
   }
@@ -7209,12 +7208,12 @@ function renderExercise() {
         <span id="eng-hint"></span>
       </div>
       <input
-        class="answer-input ${state.answered ? (state.lastCorrect?'correct':'wrong') : ''}"
+        class="answer-input ${state.answered && state.lastCorrect ? 'correct' : state.wrongAttempt ? 'wrong' : ''}"
         id="ans"
         type="text"
         placeholder="conjugate…"
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
-        ${state.answered ? 'disabled' : ''}
+        ${state.answered && state.lastCorrect ? 'disabled' : ''}
         onkeydown="if(event.key==='Enter'){event.preventDefault();handleEnter()}"
       >
       ${feedbackHtml}
@@ -7288,6 +7287,7 @@ function startSession() {
   state.tenseIdx = 0;
   state.pronIdx = 0;
   state.answered = false;
+  state.wrongAttempt = false;
   state.sessionCorrect = 0;
   state.sessionTotal = 0;
   state.screen = "exercise";
@@ -7306,7 +7306,6 @@ function handleEnter() {
 
 function normalize(s) {
   return (s||"").toLowerCase().trim()
-    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/\s+/g, " ");
 }
 
@@ -7319,15 +7318,28 @@ function checkAnswer() {
   const correct = forms ? (forms[state.pronIdx] || "") : "";
   const alts = correct.split("/").map(s => s.trim()).filter(Boolean);
   const isCorrect = alts.some(a => normalize(val) === normalize(a));
-  state.sessionTotal++;
-  if (isCorrect) state.sessionCorrect++;
-  state.answered = true;
-  state.lastCorrect = isCorrect;
+  if (isCorrect) {
+    state.sessionTotal++;
+    state.sessionCorrect++;
+    state.answered = true;
+    state.lastCorrect = true;
+    state.wrongAttempt = false;
+  } else {
+    // Wrong: only count on first attempt, show error, re-enable input
+    if (!state.wrongAttempt) state.sessionTotal++;
+    state.wrongAttempt = true;
+    state.lastCorrect = false;
+  }
   render();
+  if (!isCorrect) {
+    const inp2 = document.getElementById("ans");
+    if (inp2) { inp2.value = ""; inp2.focus(); }
+  }
 }
 
 function skipIt() {
-  state.sessionTotal++;
+  if (!state.wrongAttempt) state.sessionTotal++;
+  state.wrongAttempt = false;
   state.lastCorrect = false;
   state.answered = true;
   render();
@@ -7339,6 +7351,7 @@ function nextStep() {
   const numPronouns = tense ? tense.pronLabels.length : 6;
   state.pronIdx++;
   state.answered = false;
+  state.wrongAttempt = false;
 
   if (state.pronIdx >= numPronouns) {
     state.pronIdx = 0;

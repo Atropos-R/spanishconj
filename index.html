@@ -241,6 +241,25 @@
   .feedback.wrong { color: var(--red); }
   .feedback .correct-form { font-weight: 600; }
 
+  .accent-btns {
+    display: flex; gap: 0.35rem; flex-wrap: wrap; margin-top: 0.6rem;
+  }
+  .accent-btn {
+    font-family: 'Georgia', serif;
+    font-size: 1rem;
+    width: 2.1rem; height: 2.1rem;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.12s;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .accent-btn:hover { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+  .accent-btn:active { transform: scale(0.93); }
+
   .btn-row { display: flex; gap: 0.5rem; justify-content: flex-end; margin-top: 1rem; }
 
   .btn {
@@ -289,6 +308,28 @@
   ::-webkit-scrollbar { width: 6px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+  .conj-panel {
+    margin-top: 0.75rem; border: 1px solid var(--border);
+    border-radius: var(--radius-sm); overflow: hidden;
+    font-family: system-ui, sans-serif; font-size: 0.875rem;
+  }
+  .conj-panel table { width: 100%; border-collapse: collapse; }
+  .conj-panel td { padding: 0.4rem 0.75rem; border-bottom: 1px solid var(--border); }
+  .conj-panel tr:last-child td { border-bottom: none; }
+  .conj-panel td:first-child { color: var(--text-muted); width: 44%; }
+  .conj-panel td:last-child { font-weight: 500; }
+  .conj-panel tr.hi { background: var(--accent-light); }
+  .conj-panel tr.hi td { color: var(--accent); }
+  .show-conj-btn {
+    font-size: 0.75rem; padding: 0.22rem 0.6rem;
+    border: 1px solid var(--border-strong); border-radius: var(--radius-sm);
+    background: transparent; color: var(--text-faint);
+    cursor: pointer; transition: all 0.12s; font-family: system-ui, sans-serif;
+  }
+  .show-conj-btn:hover, .show-conj-btn.active {
+    color: var(--accent); border-color: var(--accent); background: var(--accent-light);
+  }
 
   /* Responsive */
   @media (max-width: 480px) {
@@ -7062,6 +7103,7 @@ let state = {
   answered: false,
   lastCorrect: false,
   wrongAttempt: false,
+  showTable: false,
   sessionCorrect: 0,
   sessionTotal: 0,
 };
@@ -7214,12 +7256,35 @@ function renderExercise() {
         placeholder="conjugate…"
         autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false"
         ${state.answered && state.lastCorrect ? 'disabled' : ''}
-        onkeydown="if(event.key==='Enter'){event.preventDefault();handleEnter()}"
       >
+      <div class="accent-btns" id="accent-row">
+        <button class="accent-btn" onclick="insertAccent('á')" tabindex="-1">á</button>
+        <button class="accent-btn" onclick="insertAccent('é')" tabindex="-1">é</button>
+        <button class="accent-btn" onclick="insertAccent('í')" tabindex="-1">í</button>
+        <button class="accent-btn" onclick="insertAccent('ó')" tabindex="-1">ó</button>
+        <button class="accent-btn" onclick="insertAccent('ú')" tabindex="-1">ú</button>
+        <button class="accent-btn" onclick="insertAccent('ü')" tabindex="-1">ü</button>
+        <button class="accent-btn" onclick="insertAccent('ñ')" tabindex="-1">ñ</button>
+      </div>
       ${feedbackHtml}
+      ${(()=>{
+        if (!state.showTable || !forms) return '';
+        const rows = pronouns.map((p,i) => {
+          const f = forms[i] || '—';
+          const isCur = i === state.pronIdx;
+          return `<tr class="${isCur?'hi':''}"><td>${esc(p)}</td><td>${esc(f)}</td></tr>`;
+        }).join('');
+        return `<div class="conj-panel"><table>${rows}</table></div>`;
+      })()}
       <div class="btn-row">
+        <button class="show-conj-btn ${state.showTable?'active':''}" onclick="toggleTable()" tabindex="-1">
+          ${state.showTable ? 'Hide table' : 'Show all forms'}
+        </button>
+        <div style="flex:1"></div>
         ${!state.answered ? `<button class="btn" onclick="skipIt()">Skip</button>` : ''}
-        <button class="btn btn-primary" id="main-btn" onclick="${state.answered?'nextStep()':'checkAnswer()'}">${nextLabel()}</button>
+        <button class="btn btn-primary" id="main-btn" onclick="${state.answered?'nextStep()':'checkAnswer()'}">
+          ${nextLabel()}
+        </button>
       </div>
     </div>
   `;
@@ -7288,6 +7353,7 @@ function startSession() {
   state.pronIdx = 0;
   state.answered = false;
   state.wrongAttempt = false;
+  state.showTable = false;
   state.sessionCorrect = 0;
   state.sessionTotal = 0;
   state.screen = "exercise";
@@ -7300,9 +7366,37 @@ function goSettings() {
 }
 
 function handleEnter() {
-  if (state.answered) nextStep();
-  else checkAnswer();
+  if (state.screen !== 'exercise') return;
+  if (state.answered && state.lastCorrect) nextStep();
+  else if (!state.answered) checkAnswer();
 }
+
+function toggleTable() {
+  state.showTable = !state.showTable;
+  render();
+  if (!state.showTable) {
+    const inp = document.getElementById("ans");
+    if (inp && !(state.answered && state.lastCorrect)) inp.focus();
+  }
+}
+
+function insertAccent(char) {
+  const inp = document.getElementById("ans");
+  if (!inp || (state.answered && state.lastCorrect)) return;
+  const start = inp.selectionStart;
+  const end = inp.selectionEnd;
+  const val = inp.value;
+  inp.value = val.slice(0, start) + char + val.slice(end);
+  inp.selectionStart = inp.selectionEnd = start + 1;
+  inp.focus();
+}
+
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Enter') {
+    e.preventDefault();
+    handleEnter();
+  }
+});
 
 function normalize(s) {
   return (s||"").toLowerCase().trim()
@@ -7352,6 +7446,7 @@ function nextStep() {
   state.pronIdx++;
   state.answered = false;
   state.wrongAttempt = false;
+  state.showTable = false;
 
   if (state.pronIdx >= numPronouns) {
     state.pronIdx = 0;
